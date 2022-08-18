@@ -3,11 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import configuration from './config/configuration';
 import { HealthCheckDBService } from './healthcheck.db.service';
+import { HealthCheckRestController } from './healthcheck.rest.controller';
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import { NatsController } from './nats.controller';
-import { WebSocketService } from './websocket.service';
-import { AuthService } from './auth.service';
-import { NotificationService } from './notification.service';
 
 @Module({
   imports: [
@@ -29,13 +27,7 @@ import { NotificationService } from './notification.service';
       },
     ]),
   ],
-  controllers: [NatsController],
-  providers: [
-    WebSocketService,
-    HealthCheckDBService,
-    PrismaService,
-    AuthService,
-    NotificationService,
-  ],
+  controllers: [NatsController, HealthCheckRestController],
+  providers: [HealthCheckDBService, PrismaService],
 })
 export class AppModule {}

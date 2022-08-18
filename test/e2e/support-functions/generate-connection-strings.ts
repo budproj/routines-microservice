@@ -9,8 +9,8 @@ export const getPostgresConnectionString = (postgresEnv: Env) =>
 export const getNatsConnectionString = (postgresEnv: Env) =>
   `nats://${postgresEnv.host}:${postgresEnv.port}`;
 
-export const getWsConnectionString = (apiEnv: Env) =>
-  `ws://${apiEnv.host}:${apiEnv.port}`;
+export const getRestConnectionString = (apiEnv: Env) =>
+  `http://${apiEnv.host}:${apiEnv.port}`;
 
 export const getJwtConnectionString = (jwtEnv: Env) =>
   `http://${jwtEnv.host}:${jwtEnv.port}/`;

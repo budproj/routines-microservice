@@ -2,25 +2,17 @@ import { ClientNats, ClientsModule, Transport } from '@nestjs/microservices';
 import { Test } from '@nestjs/testing';
 import { HealthCheckDBService } from './healthcheck.db.service';
 import { NatsController } from './nats.controller';
-import { NotificationService } from './notification.service';
-import { WebSocketService } from './websocket.service';
 
 describe('NATS Controller', () => {
   let natsController: NatsController;
   const emitMock = jest.spyOn(ClientNats.prototype, 'emit');
   const dbHealthCheckPath = jest.fn();
-  const notificationCreation = jest.fn();
-  const notifyUser = jest.fn();
 
   beforeEach(jest.resetAllMocks);
 
   // Module Setup
   beforeEach(async () => {
-    const WebSocketServiceMock = { notifyUser: notifyUser };
     const HealthCheckDBServiceMock = { patch: dbHealthCheckPath };
-    const NotificationServiceMock = {
-      createnotification: notificationCreation,
-    };
 
     const moduleRef = await Test.createTestingModule({
       imports: [
@@ -29,14 +21,10 @@ describe('NATS Controller', () => {
         ]),
       ],
       controllers: [NatsController],
-      providers: [WebSocketService, HealthCheckDBService, NotificationService],
+      providers: [HealthCheckDBService],
     })
-      .overrideProvider(WebSocketService)
-      .useValue(WebSocketServiceMock)
       .overrideProvider(HealthCheckDBService)
       .useValue(HealthCheckDBServiceMock)
-      .overrideProvider(NotificationService)
-      .useValue(NotificationServiceMock)
       .compile();
 
     natsController = moduleRef.get(NatsController);
@@ -65,39 +53,6 @@ describe('NATS Controller', () => {
       // Assert
       expect(dbHealthCheckPath).toBeCalledTimes(1);
       expect(dbHealthCheckPath).toBeCalledWith('some id');
-    });
-  });
-
-  describe('notifications', () => {
-    const notificationData = {
-      id: 'abc123',
-      isRead: false,
-      type: 'supportTeam',
-      timestamp: new Date(),
-      messageId: '12312',
-      recipientId: '12312',
-      properties: {
-        sender: {
-          id: '1232',
-          name: 'Ricardo',
-          picture: 'https://www.gravatar.com/avatar/0?d=mp&f=y',
-        },
-        keyResult: {
-          id: '12331',
-          name: 'Teste',
-        },
-      },
-    };
-    it('should save the notification on the database', async () => {
-      natsController.onNewNotification(notificationData);
-      expect(notificationCreation).toBeCalledWith(notificationData);
-    });
-    it('should notify the user via websocket', () => {
-      natsController.onNewNotification(notificationData);
-      expect(notifyUser).toBeCalledWith(
-        notificationData.recipientId,
-        notificationData,
-      );
     });
   });
 });

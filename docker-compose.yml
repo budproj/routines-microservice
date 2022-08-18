@@ -20,10 +20,10 @@ services:
     volumes:
       - ./postgres-data/:/data/postgres
     ports:
-      - ${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}
+      - ${POSTGRES_PORT:-5432}:5432
 
 
-  notification-microservice:
+  routine-microservice:
     build: .
     ports:
       - 3000:3000
@@ -32,3 +32,4 @@ services:
     environment:
       PORT: 3000
       NATS_CONNECTION_STRING: nats://broker-nats:4222
+      DATABASE_URL: postgresql://routines:changeme@postgres:5432/routines?schema=public

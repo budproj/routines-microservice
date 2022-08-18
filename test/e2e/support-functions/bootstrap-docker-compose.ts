@@ -11,6 +11,7 @@ const waitForText = Wait.forLogMessage;
 let dockerComposeEnvironment: StartedDockerComposeEnvironment;
 
 export const bootstrapDockerCompose = async () => {
+  console.log('passou');
   dockerComposeEnvironment = await new DockerComposeEnvironment(
     composeFilePath,
     'e2e.docker-compose.yml',
