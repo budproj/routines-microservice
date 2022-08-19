@@ -4,7 +4,7 @@ export interface Env {
 }
 
 export const getPostgresConnectionString = (postgresEnv: Env) =>
-  `postgresql://notifications:changeme@${postgresEnv.host}:${postgresEnv.port}/notifications?schema=public`;
+  `postgresql://routines:changeme@${postgresEnv.host}:${postgresEnv.port}/routines?schema=public`;
 
 export const getNatsConnectionString = (postgresEnv: Env) =>
   `nats://${postgresEnv.host}:${postgresEnv.port}`;

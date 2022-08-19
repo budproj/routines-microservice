@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notifications-microservice-canary
+  name: routines-microservice-canary
   labels:
-    app.kubernetes.io/name: notifications-microservice-canary
+    app.kubernetes.io/name: routines-microservice-canary
     app.kubernetes.io/part-of: application-layer
     app.kubernetes.io/component: microservice-application
     app.kubernetes.io/version: 1.0.0
@@ -13,18 +13,18 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: notifications-microservice-canary
+      app.kubernetes.io/name: routines-microservice-canary
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: notifications-microservice-canary
+        app.kubernetes.io/name: routines-microservice-canary
         app.kubernetes.io/part-of: application-layer
         app.kubernetes.io/component: microservice-application
         app.kubernetes.io/version: 1.0.0
     spec:
       containers:
-        - name: notifications-microservice
-          image: 904333181156.dkr.ecr.sa-east-1.amazonaws.com/notifications-microservice:$ECR_TAG
+        - name: routines-microservice
+          image: 904333181156.dkr.ecr.sa-east-1.amazonaws.com/routines-microservice:$ECR_TAG
           ports:
             - containerPort: 80
           env:
@@ -37,19 +37,19 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: notifications-microservice
+                  name: routines-microservice
                   key: database-url
 
             - name: AUTHZ_ISSUER
               value: https://auth.getbud.co/
 
       initContainers:
-        - name: notifications-microservice-canary-execute-migrations
-          image: 904333181156.dkr.ecr.sa-east-1.amazonaws.com/notifications-microservice:$ECR_TAG
+        - name: routines-microservice-canary-execute-migrations
+          image: 904333181156.dkr.ecr.sa-east-1.amazonaws.com/routines-microservice:$ECR_TAG
           command: ['npm', 'run', 'migrate:prod']
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: notifications-microservice
+                  name: routines-microservice
                   key: database-url

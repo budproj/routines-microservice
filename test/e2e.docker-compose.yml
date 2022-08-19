@@ -15,14 +15,14 @@ services:
     container_name: postgres
     image: postgres:alpine
     environment:
-      POSTGRES_USER: 'notifications'
+      POSTGRES_USER: 'routines'
       POSTGRES_PASSWORD: 'changeme'
-      POSTGRES_DB: 'notifications'
+      POSTGRES_DB: 'routines'
       POSTGRES_PORT: 5432
     ports:
       - 5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d notifications -U notifications"]
+      test: ["CMD-SHELL", "pg_isready -d routines -U routines"]
       interval: 1s
       timeout: 1s
       retries: 10
@@ -45,7 +45,7 @@ services:
     environment:
       PORT: 3000
       NATS_CONNECTION_STRING: nats://nats:4222
-      DATABASE_URL: "postgresql://notifications:changeme@postgres:5432/notifications?schema=public"
+      DATABASE_URL: "postgresql://routines:changeme@postgres:5432/routines?schema=public"
       AUTHZ_ISSUER: "http://fake-jwt-server:8088/"
 
   fake-jwt-server:
