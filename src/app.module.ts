@@ -6,6 +6,7 @@ import { HealthCheckDBService } from './healthcheck.db.service';
 import { HealthCheckRestController } from './healthcheck.rest.controller';
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import { NatsController } from './nats.controller';
+import { CronService } from './services/cron.service';
 
 @Module({
   imports: [
@@ -28,6 +29,6 @@ import { NatsController } from './nats.controller';
     ]),
   ],
   controllers: [NatsController, HealthCheckRestController],
-  providers: [HealthCheckDBService, PrismaService],
+  providers: [HealthCheckDBService, PrismaService, CronService],
 })
 export class AppModule {}
