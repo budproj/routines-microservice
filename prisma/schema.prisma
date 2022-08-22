@@ -10,9 +10,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model healthCheck {
-  id    String    @db.Uuid    @id   @default(uuid())
+model Routine {
+  id    String       @db.Uuid   @id   @default(uuid())
+  name  String
+  cadence Cadence
+  startDate DateTime @default(now())
+  companyId String   @db.Uuid
+  disabledTeams String[]
 }
 
+model AnswerGroup {
+  id    String      @db.Uuid    @id   @default(uuid())
+  companyId String  @db.Uuid
+  userId String     @db.Uuid
+  answers Answer[]
+  timestamp DateTime @default(now())
+}
+
+model Answer {
+  id    String         @db.Uuid    @id   @default(uuid())
+  questionId String    @db.Uuid
+  answerGroup   AnswerGroup @relation(fields: [answerGroupId], references: [id])
+  answerGroupId String @db.Uuid
+  value String
+}
+
+enum Cadence {
+  WEEKLY
+}
 
 // TODO: add models, then run `npx prisma migrate dev --name init`
