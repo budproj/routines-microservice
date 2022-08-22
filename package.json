@@ -34,6 +34,7 @@
     "@nestjs/websockets": "^9.0.11",
     "@prisma/client": "^4.2.1",
     "cron-parser": "^4.6.0",
+    "dayjs": "^1.11.5",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.1.4",
     "nats": "^2.7.1",
