@@ -9,6 +9,8 @@ import { NatsController } from './nats.controller';
 import { RoutineService } from './services/routines.service';
 import { AnswerGroupService } from './services/answerGroup.service';
 import { CronService } from './services/cron.service';
+import { FormService } from './services/form.service';
+import { FormControler } from './form.controller';
 
 @Module({
   imports: [
@@ -30,13 +32,14 @@ import { CronService } from './services/cron.service';
       },
     ]),
   ],
-  controllers: [NatsController, HealthCheckRestController],
+  controllers: [NatsController, HealthCheckRestController, FormControler],
   providers: [
     HealthCheckDBService,
     PrismaService,
     RoutineService,
     AnswerGroupService,
     CronService,
+    FormService,
   ],
 })
 export class AppModule {}
