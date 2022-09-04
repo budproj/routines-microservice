@@ -1,9 +1,8 @@
-import { Cadence } from '@prisma/client';
 import * as cronParser from 'cron-parser';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
-import { CronService } from './cron.service';
+import { CronService, Cadence } from './cron.service';
 
 describe('Cron Service', () => {
   const cronService = new CronService();
