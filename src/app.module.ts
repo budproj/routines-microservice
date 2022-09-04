@@ -39,4 +39,8 @@ import { CronService } from './services/cron.service';
     CronService,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(UserValidatorMiddleware).forRoutes('*');
+  }
+}
