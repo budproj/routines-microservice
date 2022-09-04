@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { AnswerGroup, Prisma } from '@prisma/client';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
+import { User } from '../types/User';
 
 @Injectable()
 export class AnswerGroupService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {
+    dayjs.extend(utc);
+  }
 
   async answerGroup(
     answerGroupWhereUniqueInput: Prisma.AnswerGroupWhereUniqueInput,
@@ -69,5 +74,25 @@ export class AnswerGroupService {
     return this.prisma.answerGroup.delete({
       where,
     });
+  }
+
+  async latestAnswerFromUser(userId: User['id']) {
+    const [latestAnswer] = await this.answerGroups({
+      where: { userId },
+      take: 1,
+      orderBy: {
+        timestamp: 'desc',
+      },
+    });
+
+    return latestAnswer;
+  }
+
+  answeredWithinTimeSpan(answerDate: Date, timeSpanForAnwser: number): boolean {
+    const todayUtcDate = dayjs().utc();
+    const differenceInDaysFromToday = todayUtcDate.diff(answerDate, 'day');
+    const answeredWithinTimeSpan =
+      differenceInDaysFromToday <= timeSpanForAnwser;
+    return answeredWithinTimeSpan;
   }
 }

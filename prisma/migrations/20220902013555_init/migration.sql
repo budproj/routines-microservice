@@ -1,16 +1,18 @@
--- CreateEnum
-CREATE TYPE "Cadence" AS ENUM ('WEEKLY');
+-- CreateTable
+CREATE TABLE "healthCheck" (
+    "id" UUID NOT NULL,
+
+    CONSTRAINT "healthCheck_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
-CREATE TABLE "Routine" (
+CREATE TABLE "RoutineSettings" (
     "id" UUID NOT NULL,
-    "name" TEXT NOT NULL,
-    "cadence" "Cadence" NOT NULL,
-    "startDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "companyId" UUID NOT NULL,
     "disabledTeams" TEXT[],
+    "cron" TEXT NOT NULL,
 
-    CONSTRAINT "Routine_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "RoutineSettings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -32,6 +34,9 @@ CREATE TABLE "Answer" (
 
     CONSTRAINT "Answer_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RoutineSettings_companyId_key" ON "RoutineSettings"("companyId");
 
 -- AddForeignKey
 ALTER TABLE "Answer" ADD CONSTRAINT "Answer_answerGroupId_fkey" FOREIGN KEY ("answerGroupId") REFERENCES "AnswerGroup"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

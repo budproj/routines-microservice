@@ -1,87 +1,79 @@
-import { Controller, Get } from '@nestjs/common';
-import { Routine, AnswerGroup } from '@prisma/client';
+import { Controller, Get, Logger } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
-import { RoutineService } from '../services/routines.service';
+import { User } from '../decorators/user.decorator';
+import { User as UserType } from '../types/User';
 import { AnswerGroupService } from '../services/answerGroup.service';
 import { CronService } from '../services/cron.service';
+import { RoutineService } from '../services/routines.service';
+import { RoutineSettingsService } from '../services/routineSettings.service';
 
-interface RoutineWithAnswer extends Routine {
-  answer: AnswerGroup[];
-}
+import { pendingRoutineSerializer } from './pending-routines.serializer';
 
-@Controller('/routines/pending')
+@Controller('/pending')
 export class PendingRoutinesController {
+  private readonly logger = new Logger(PendingRoutinesController.name);
+
   constructor(
     private cron: CronService,
     private routine: RoutineService,
+    private routineSettings: RoutineSettingsService,
     private answerGroup: AnswerGroupService,
   ) {
     dayjs.extend(utc);
   }
 
   @Get()
-  async getPendingRoutines(): Promise<Routine[]> {
-    const userId = 'b159ef12-9062-49c6-8afc-372e8848fb15';
-    const routines = await this.routine.routines({});
-
-    const routinesForThisWeek = routines.filter((routine) => {
-      const { startDate, cadence } = routine;
-      const interval = this.cron.parseFromCadence(cadence, startDate);
-      const previousRunningDate = interval.prev().toDate();
-
-      const isExactDayOfRunning = dayjs()
-        .utc()
-        .isSame(previousRunningDate, 'day');
-
-      if (isExactDayOfRunning) {
-        return true;
-      }
-
-      const nextRunningDate = interval.next().toDate();
-      const differenceInDaysFromToday = dayjs(nextRunningDate)
-        .utc()
-        .diff(dayjs().utc(), 'day');
-      const nextRunInLessThenAWeek = differenceInDaysFromToday <= 7;
-      return nextRunInLessThenAWeek;
+  async getPendingRoutines(@User() user: UserType): Promise<any> {
+    const [company] = user.companies;
+    const routine = this.routine.routine();
+    const companyRoutineSettings = await this.routineSettings.routineSettings({
+      companyId: company.id,
     });
 
-    const routinesWithAnswerPromises = routinesForThisWeek.map(
-      async (routine): Promise<RoutineWithAnswer> => {
-        const userAnswerForThisRoutine = await this.answerGroup.answerGroups({
-          where: { userId },
-          take: 1,
-        });
+    if (!companyRoutineSettings) {
+      return [];
+    }
 
-        return {
-          ...routine,
-          answer: userAnswerForThisRoutine,
-        };
-      },
+    const userTeamIds = user.teams.map((team) => team.id);
+    const allTeamsOptedOut = this.routineSettings.allTeamsOptedOut(
+      companyRoutineSettings.disabledTeams,
+      userTeamIds,
     );
 
-    const routinesWithAnswer = await Promise.all(routinesWithAnswerPromises);
-    const notAnsweredRoutines = routinesWithAnswer
-      .filter((routine) => {
-        if (routine.answer.length === 0) {
-          return true;
-        }
+    if (allTeamsOptedOut) {
+      return [];
+    }
 
-        const [userAnswer] = routine.answer;
-        const answerDate = userAnswer.timestamp;
-        const differenceInDaysFromToday = dayjs()
-          .utc()
-          .diff(dayjs(answerDate).utc(), 'day');
+    const latestAnswer = await this.answerGroup.latestAnswerFromUser(user.id);
+    const cronExpression = this.cron.parse(companyRoutineSettings.cron);
+    const daysOutdated = this.cron.daysOutdated(cronExpression);
 
-        const answeredThisWeek = differenceInDaysFromToday <= 7;
-        return !answeredThisWeek;
-      })
-      .map((routine) => {
-        delete routine.answer;
-        return routine;
-      });
+    if (!latestAnswer) {
+      const serializedRoutine = pendingRoutineSerializer(routine, daysOutdated);
+      return [serializedRoutine];
+    }
 
-    return notAnsweredRoutines ?? [];
+    const answerDate = latestAnswer.timestamp;
+    const answerUtc = dayjs(answerDate).utc();
+    const answerUtcDate = answerUtc.toDate();
+
+    const timeSpanForAnwser = this.routine.getTimeSpanForAnwser();
+    const answeredWithinTimeSpan = this.answerGroup.answeredWithinTimeSpan(
+      answerUtcDate,
+      timeSpanForAnwser,
+    );
+
+    if (answeredWithinTimeSpan) {
+      return [];
+    }
+
+    const serializedRoutine = pendingRoutineSerializer(
+      routine,
+      daysOutdated,
+      answerUtcDate,
+    );
+    return [serializedRoutine];
   }
 }
