@@ -12,14 +12,14 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`routines.getbud.co`)
+    - match: Host(`api.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
       middlewares:
         - name: websocket-middleware # This allows https upgrade to wss
       services:
         - name: routines-microservice-stable
           port: 80
-    - match: Host(`routines.canary.getbud.co`)
+    - match: Host(`api.canary.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
       middlewares:
         - name: websocket-middleware # This allows https upgrade to wss
@@ -31,7 +31,6 @@ spec:
     options:
       minVersion: VersionTLS12
 
-
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -40,4 +39,4 @@ metadata:
 spec:
   headers:
     customRequestHeaders:
-      X-Forwarded-Proto: "https"
+      X-Forwarded-Proto: 'https'
