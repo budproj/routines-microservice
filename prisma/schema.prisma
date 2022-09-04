@@ -10,13 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Routine {
+model healthCheck {
+  id    String    @db.Uuid    @id   @default(uuid())
+}
+
+model RoutineSettings {
   id    String       @db.Uuid   @id   @default(uuid())
-  name  String
-  cadence Cadence
-  startDate DateTime @default(now())
-  companyId String   @db.Uuid
+  companyId String   @db.Uuid   @unique
   disabledTeams String[]
+  cron String
 }
 
 model AnswerGroup {
@@ -33,10 +35,6 @@ model Answer {
   answerGroup   AnswerGroup @relation(fields: [answerGroupId], references: [id])
   answerGroupId String @db.Uuid
   value String
-}
-
-enum Cadence {
-  WEEKLY
 }
 
 // TODO: add models, then run `npx prisma migrate dev --name init`
