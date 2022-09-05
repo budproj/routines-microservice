@@ -37,5 +37,6 @@ kind: Middleware
 metadata:
   name: routines-microservice-replace-root-path
 spec:
-  replacePath:
-    path: /
+  replacePathRegex:
+    regex: ^/routines/(.*)
+    replacement: /$1
