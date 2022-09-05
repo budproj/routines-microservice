@@ -14,6 +14,7 @@ import { CronService } from './services/cron.service';
 import { FormService } from './services/form.service';
 import { FormControler } from './form.controller';
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
+import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { UserValidatorMiddleware } from './middlewares/user-validator.middleware
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer.apply(UserValidatorMiddleware).forRoutes('*');
   }
 }
