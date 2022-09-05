@@ -14,11 +14,15 @@ spec:
   routes:
     - match: Host(`api.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
+      middlewares:
+        - name: routines-microservice-replace-root-path
       services:
         - name: routines-microservice-stable
           port: 80
     - match: Host(`api.canary.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
+      middlewares:
+        - name: routines-microservice-replace-root-path
       services:
         - name: routines-microservice-canary
           port: 80
@@ -26,3 +30,12 @@ spec:
     certResolver: letsencrypt
     options:
       minVersion: VersionTLS12
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: routines-microservice-replace-root-path
+spec:
+  replacePath:
+    path: /
