@@ -55,6 +55,8 @@ import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
-    consumer.apply(UserValidatorMiddleware).forRoutes('*');
+    consumer
+      .apply(UserValidatorMiddleware)
+      .forRoutes(PendingRoutinesController, FormControler);
   }
 }
