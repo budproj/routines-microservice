@@ -15,6 +15,8 @@ import { FormService } from './services/form.service';
 import { FormControler } from './form.controller';
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
+import { AnswersFormController } from './answers/answers.controller';
+import { AnswersService } from './services/answers.service';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
     HealthCheckRestController,
     PendingRoutinesController,
     FormControler,
+    AnswersFormController,
   ],
   providers: [
     HealthCheckDBService,
@@ -48,6 +51,7 @@ import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
     RoutineService,
     RoutineSettingsService,
     AnswerGroupService,
+    AnswersService,
     CronService,
     FormService,
   ],
@@ -57,6 +61,10 @@ export class AppModule implements NestModule {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer
       .apply(UserValidatorMiddleware)
-      .forRoutes(PendingRoutinesController, FormControler);
+      .forRoutes(
+        PendingRoutinesController,
+        FormControler,
+        AnswersFormController,
+      );
   }
 }
