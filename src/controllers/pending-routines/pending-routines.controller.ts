@@ -2,12 +2,12 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
-import { User } from '../decorators/user.decorator';
-import { User as UserType } from '../types/User';
-import { AnswerGroupService } from '../services/answerGroup.service';
-import { CronService } from '../services/cron.service';
-import { RoutineService } from '../services/routines.service';
-import { RoutineSettingsService } from '../services/routineSettings.service';
+import { User } from '../../decorators/user.decorator';
+import { User as UserType } from '../../types/User';
+import { AnswerGroupService } from '../../services/answerGroup.service';
+import { CronService } from '../../services/cron.service';
+import { RoutineService } from '../../services/routines.service';
+import { RoutineSettingsService } from '../../services/routineSettings.service';
 
 import { pendingRoutineSerializer } from './pending-routines.serializer';
 

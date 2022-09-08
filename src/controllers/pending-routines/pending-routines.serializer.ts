@@ -1,4 +1,4 @@
-import { Routine } from '../services/routines.service';
+import { Routine } from '../../services/routines.service';
 
 export interface PendingRoutine extends Routine {
   status: {

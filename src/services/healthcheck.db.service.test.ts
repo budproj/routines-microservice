@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { HealthCheckDBService } from './healthcheck.db.service';
-import { PrismaService } from './infrastructure/orm/prisma.service';
+import { PrismaService } from '../infrastructure/orm/prisma.service';
 
 beforeEach(jest.resetAllMocks);
 

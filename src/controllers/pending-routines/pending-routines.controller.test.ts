@@ -1,12 +1,12 @@
 import { Test } from '@nestjs/testing';
 import * as dayjs from 'dayjs';
 
-import { PrismaService } from '../infrastructure/orm/prisma.service';
-import { RoutineService, Cadence } from '../services/routines.service';
-import { AnswerGroupService } from '../services/answerGroup.service';
-import { CronService } from '../services/cron.service';
-import { RoutineSettingsService } from '../services/routineSettings.service';
-import { User } from '../types/User';
+import { PrismaService } from '../../infrastructure/orm/prisma.service';
+import { RoutineService, Cadence } from '../../services/routines.service';
+import { AnswerGroupService } from '../../services/answerGroup.service';
+import { CronService } from '../../services/cron.service';
+import { RoutineSettingsService } from '../../services/routineSettings.service';
+import { User } from '../../types/User';
 
 import { PendingRoutinesController } from './pending-routines.controller';
 

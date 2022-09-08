@@ -2,22 +2,23 @@ import { Injectable } from '@nestjs/common';
 
 import { budRoutineEnForm } from '../shared/providers/form-provider/bud-routine-en';
 import { budRoutinePtBrForm } from '../shared/providers/form-provider/bud-routine-ptBR';
-import { RoutineFormLangs } from './constants/form';
-import RoutineForm from './dtos/get-form.dto';
+import { FormQuestion } from '../types/FormQuestion';
 
-interface getRoutineForm {
-  intl: RoutineFormLangs | string;
+import { RoutineFormLangs } from './constants/form';
+
+export interface FormQuestions {
+  questions: FormQuestion[];
 }
+
+const routineForms = new Map([
+  [RoutineFormLangs.PT_BR, budRoutinePtBrForm],
+  [RoutineFormLangs.EN_US, budRoutineEnForm],
+]);
 
 @Injectable()
 export class FormService {
-  getForm({ intl }: getRoutineForm): RoutineForm | [] {
-    if (intl === RoutineFormLangs.PT_BR)
-      return { questions: budRoutinePtBrForm };
-    if (intl === RoutineFormLangs.EN_US)
-      return {
-        questions: budRoutineEnForm,
-      };
-    return [];
+  getRoutineForm(language: RoutineFormLangs): FormQuestion[] {
+    const formQuestions = routineForms.get(language);
+    return formQuestions ?? [];
   }
 }
