@@ -16,7 +16,7 @@ import { FormService } from './services/form.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
-import { AnswersFormController } from './answers/answers.controller';
+import { AnswerController } from './answer/answer.controller';
 import { AnswersService } from './services/answers.service';
 
 import { PrismaService } from './infrastructure/orm/prisma.service';
@@ -47,7 +47,7 @@ import configuration from './config/configuration';
     HealthCheckRestController,
     PendingRoutinesController,
     FormControler,
-    AnswersFormController,
+    AnswerController,
   ],
   providers: [
     HealthCheckDBService,
@@ -65,10 +65,6 @@ export class AppModule implements NestModule {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer
       .apply(UserValidatorMiddleware)
-      .forRoutes(
-        PendingRoutinesController,
-        FormControler,
-        AnswersFormController,
-      );
+      .forRoutes(PendingRoutinesController, FormControler, AnswerController);
   }
 }

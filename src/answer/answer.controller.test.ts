@@ -4,13 +4,13 @@ import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { AnswerGroupService } from '../services/answerGroup.service';
 import { User } from '../types/User';
 
-import { AnswersFormController } from './answers.controller';
+import { AnswerController as AnswerControllerClass } from './answer.controller';
 import { AnswersService } from '../services/answers.service';
 import { randomUUID } from 'crypto';
 
 beforeEach(jest.resetAllMocks);
 
-describe('Answers Controller', () => {
+describe('Answer Controller', () => {
   const answerGroupServiceMock = {
     createAnswerGroup: jest.fn(),
   };
@@ -35,10 +35,10 @@ describe('Answers Controller', () => {
     teams: [{ id: '968e8d90-c1dd-4d5c-948a-067e070ea269' }],
   };
 
-  let AnswerController: AnswersFormController;
+  let AnswerController: AnswerControllerClass;
   const ModuleRef = Test.createTestingModule({
     imports: [],
-    controllers: [AnswersFormController],
+    controllers: [AnswerControllerClass],
     providers: [AnswersService, AnswerGroupService, PrismaService],
   })
     .overrideProvider(AnswerGroupService)
@@ -48,7 +48,7 @@ describe('Answers Controller', () => {
 
   beforeAll(async () => {
     const CompiledModule = await ModuleRef.compile();
-    AnswerController = CompiledModule.get(AnswersFormController);
+    AnswerController = CompiledModule.get(AnswerControllerClass);
   });
 
   describe('registerFormAnswers', () => {

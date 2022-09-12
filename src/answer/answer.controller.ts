@@ -6,8 +6,8 @@ import { AnswerGroupService } from '../services/answerGroup.service';
 import { Team } from '../types/Team';
 import { User as UserType } from '../types/User';
 
-@Controller('/answer-form')
-export class AnswersFormController {
+@Controller('/answer')
+export class AnswerController {
   constructor(
     private answerGroupService: AnswerGroupService,
     private answerService: AnswersService,
