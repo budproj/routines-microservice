@@ -1,11 +1,11 @@
 import { Test } from '@nestjs/testing';
 
-import { PrismaService } from '../infrastructure/orm/prisma.service';
-import { AnswerGroupService } from '../services/answerGroup.service';
-import { User } from '../types/User';
+import { PrismaService } from '../../infrastructure/orm/prisma.service';
+import { AnswerGroupService } from '../../services/answerGroup.service';
+import { User } from '../../types/User';
 
 import { AnswerController as AnswerControllerClass } from './answer.controller';
-import { AnswersService } from '../services/answers.service';
+import { AnswersService } from '../../services/answers.service';
 import { randomUUID } from 'crypto';
 
 beforeEach(jest.resetAllMocks);
