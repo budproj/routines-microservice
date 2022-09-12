@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
+import { AnswerController } from './controllers/answer/answer.controller';
 import { HealthCheckRestController } from './controllers/health-check/healthcheck.rest.controller';
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
 import { NatsController } from './controllers/nats/nats.controller';
@@ -16,7 +17,6 @@ import { FormService } from './services/form.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
-import { AnswerController } from './answer/answer.controller';
 import { AnswersService } from './services/answers.service';
 
 import { PrismaService } from './infrastructure/orm/prisma.service';
