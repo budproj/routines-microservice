@@ -1,17 +1,27 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import configuration from './config/configuration';
-import { HealthCheckDBService } from './healthcheck.db.service';
-import { HealthCheckRestController } from './healthcheck.rest.controller';
-import { PendingRoutinesController } from './pending-routines/pending-routines.controller';
-import { PrismaService } from './infrastructure/orm/prisma.service';
-import { NatsController } from './nats.controller';
+
+import { AnswerController } from './controllers/answer/answer.controller';
+import { HealthCheckRestController } from './controllers/health-check/healthcheck.rest.controller';
+import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
+import { NatsController } from './controllers/nats/nats.controller';
+import { FormControler } from './controllers/forms/form.controller';
+import { SettingsController } from './controllers/settings/settings.controller';
+
+import { HealthCheckDBService } from './services/healthcheck.db.service';
 import { RoutineService } from './services/routines.service';
 import { RoutineSettingsService } from './services/routineSettings.service';
 import { AnswerGroupService } from './services/answerGroup.service';
 import { CronService } from './services/cron.service';
+import { FormService } from './services/form.service';
+
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
+import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
+import { AnswersService } from './services/answers.service';
+
+import { PrismaService } from './infrastructure/orm/prisma.service';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
@@ -37,6 +47,9 @@ import { UserValidatorMiddleware } from './middlewares/user-validator.middleware
     NatsController,
     HealthCheckRestController,
     PendingRoutinesController,
+    FormControler,
+    AnswerController,
+    SettingsController,
   ],
   providers: [
     HealthCheckDBService,
@@ -44,11 +57,21 @@ import { UserValidatorMiddleware } from './middlewares/user-validator.middleware
     RoutineService,
     RoutineSettingsService,
     AnswerGroupService,
+    AnswersService,
     CronService,
+    FormService,
   ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(UserValidatorMiddleware).forRoutes('*');
+    consumer.apply(AppLoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(UserValidatorMiddleware)
+      .forRoutes(
+        PendingRoutinesController,
+        FormControler,
+        AnswerController,
+        SettingsController,
+      );
   }
 }

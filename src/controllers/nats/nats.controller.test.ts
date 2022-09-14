@@ -1,6 +1,8 @@
 import { ClientNats, ClientsModule, Transport } from '@nestjs/microservices';
 import { Test } from '@nestjs/testing';
-import { HealthCheckDBService } from './healthcheck.db.service';
+
+import { HealthCheckDBService } from '../../services/healthcheck.db.service';
+
 import { NatsController } from './nats.controller';
 
 describe('NATS Controller', () => {

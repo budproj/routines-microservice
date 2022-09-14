@@ -6,7 +6,7 @@ import {
   Payload,
   Transport,
 } from '@nestjs/microservices';
-import { HealthCheckDBService } from './healthcheck.db.service';
+import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 
 @Controller()
 export class NatsController {

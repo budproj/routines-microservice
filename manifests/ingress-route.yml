@@ -15,14 +15,14 @@ spec:
     - match: Host(`api.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
       middlewares:
-        - name: websocket-middleware # This allows https upgrade to wss
+        - name: routines-microservice-replace-root-path
       services:
         - name: routines-microservice-stable
           port: 80
     - match: Host(`api.canary.getbud.co`) && PathPrefix(`/routines`)
       kind: Rule
       middlewares:
-        - name: websocket-middleware # This allows https upgrade to wss
+        - name: routines-microservice-replace-root-path
       services:
         - name: routines-microservice-canary
           port: 80
@@ -35,8 +35,8 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: websocket-middleware
+  name: routines-microservice-replace-root-path
 spec:
-  headers:
-    customRequestHeaders:
-      X-Forwarded-Proto: 'https'
+  replacePathRegex:
+    regex: ^/routines/(.*)
+    replacement: /$1
