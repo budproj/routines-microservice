@@ -4,7 +4,7 @@ export const budRoutineEnForm = [
     type: 'reading_text',
     heading: 'Welcome to your Weekly Review!',
     content:
-      'Participating in this routine on Bud is an excellent way to maintain good alignment on the priorities and well-being of each team member.\nThis questionnaire takes about 2 minutes:\n\n**Remember:** nYour answers will be visible to everyone in the company.',
+      'Participating in this routine on Bud is an excellent way to maintain good alignment on the priorities and well-being of each team member.\nThis questionnaire takes about 2 minutes:\n\n**Remember:**\nYour answers will be visible to everyone in the company.',
   },
   {
     id: '44bd7498-e528-4f96-b45e-3a2374790373',
@@ -38,7 +38,7 @@ export const budRoutineEnForm = [
     heading: 'What got in the way of your productivity?',
     content: '',
     conditional: {
-      dependsOn: 'd968550c-ee16-4df2-9d29-729842573caf',
+      dependsOn: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
       type: 'value_range',
       value_range: 3,
     },
@@ -64,10 +64,10 @@ export const budRoutineEnForm = [
   {
     id: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
     type: 'long_text',
-    heading: 'O que te bloqueia ou te preocupa?',
+    heading: 'What blocks you or worries you?',
     content: '',
     conditional: {
-      dependsOn: '30630595-249f-4fb0-b73f-792981f65656',
+      dependsOn: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
       type: 'road_block',
       road_block: true,
     },
