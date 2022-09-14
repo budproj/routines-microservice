@@ -7,6 +7,7 @@ import { HealthCheckRestController } from './controllers/health-check/healthchec
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
 import { NatsController } from './controllers/nats/nats.controller';
 import { FormControler } from './controllers/forms/form.controller';
+import { SettingsController } from './controllers/settings/settings.controller';
 
 import { HealthCheckDBService } from './services/healthcheck.db.service';
 import { RoutineService } from './services/routines.service';
@@ -48,6 +49,7 @@ import configuration from './config/configuration';
     PendingRoutinesController,
     FormControler,
     AnswerController,
+    SettingsController,
   ],
   providers: [
     HealthCheckDBService,
@@ -65,6 +67,11 @@ export class AppModule implements NestModule {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer
       .apply(UserValidatorMiddleware)
-      .forRoutes(PendingRoutinesController, FormControler, AnswerController);
+      .forRoutes(
+        PendingRoutinesController,
+        FormControler,
+        AnswerController,
+        SettingsController,
+      );
   }
 }
