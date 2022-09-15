@@ -5,7 +5,7 @@ import * as utc from 'dayjs/plugin/utc';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { User } from '../types/User';
-
+import { AnswerGroupWithAnswers } from '../types/AnswerGroupWithAnswers';
 @Injectable()
 export class AnswerGroupService {
   constructor(private prisma: PrismaService) {
@@ -26,14 +26,16 @@ export class AnswerGroupService {
     cursor?: Prisma.AnswerGroupWhereUniqueInput;
     where?: Prisma.AnswerGroupWhereInput;
     orderBy?: Prisma.AnswerGroupOrderByWithRelationInput;
-  }): Promise<AnswerGroup[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    include?: Prisma.AnswerGroupInclude;
+  }): Promise<AnswerGroupWithAnswers[]> {
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.answerGroup.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 

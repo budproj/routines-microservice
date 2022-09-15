@@ -7,6 +7,7 @@ import { HealthCheckRestController } from './controllers/health-check/healthchec
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
 import { NatsController } from './controllers/nats/nats.controller';
 import { FormControler } from './controllers/forms/form.controller';
+import { AnswersController } from './controllers/answers/answers.controller';
 
 import { HealthCheckDBService } from './services/healthcheck.db.service';
 import { RoutineService } from './services/routines.service';
@@ -21,6 +22,7 @@ import { AnswersService } from './services/answers.service';
 
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import configuration from './config/configuration';
+import { MessagingService } from './services/messaging.service';
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import configuration from './config/configuration';
     PendingRoutinesController,
     FormControler,
     AnswerController,
+    AnswersController,
   ],
   providers: [
     HealthCheckDBService,
@@ -58,6 +61,7 @@ import configuration from './config/configuration';
     AnswersService,
     CronService,
     FormService,
+    MessagingService,
   ],
 })
 export class AppModule implements NestModule {
@@ -65,6 +69,11 @@ export class AppModule implements NestModule {
     consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer
       .apply(UserValidatorMiddleware)
-      .forRoutes(PendingRoutinesController, FormControler, AnswerController);
+      .forRoutes(
+        PendingRoutinesController,
+        FormControler,
+        AnswerController,
+        AnswersController,
+      );
   }
 }

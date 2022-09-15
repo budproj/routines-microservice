@@ -1,10 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { Answer } from '@prisma/client';
-import { User } from '../decorators/user.decorator';
-import { AnswersService } from '../services/answers.service';
-import { AnswerGroupService } from '../services/answerGroup.service';
-import { Team } from '../types/Team';
-import { User as UserType } from '../types/User';
+import { User } from '../../decorators/user.decorator';
+import { AnswersService } from '../../services/answers.service';
+import { AnswerGroupService } from '../../services/answerGroup.service';
+import { Team } from '../../types/Team';
+import { User as UserType } from '../../types/User';
 
 @Controller('/answer')
 export class AnswerController {
