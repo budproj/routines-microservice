@@ -6,6 +6,7 @@ import { User } from '../../types/User';
 import { AnswersController as AnswersControllerClass } from './answers.controller';
 import { FormService } from '../../services/form.service';
 import { MessagingService } from '../../services/messaging.service';
+import { SecurityService } from '../../services/security.service';
 
 beforeEach(jest.resetAllMocks);
 
@@ -19,6 +20,10 @@ describe('Answers Controller', () => {
 
   const formServiceMock = {
     getRoutineForm: jest.fn(),
+  };
+
+  const securityServiceMock = {
+    isUserFromTeam: jest.fn(),
   };
 
   const routineSettingsMock = {
@@ -44,14 +49,21 @@ describe('Answers Controller', () => {
   const ModuleRef = Test.createTestingModule({
     imports: [],
     controllers: [AnswersControllerClass],
-    providers: [AnswerGroupService, FormService, MessagingService],
+    providers: [
+      AnswerGroupService,
+      FormService,
+      MessagingService,
+      SecurityService,
+    ],
   })
     .overrideProvider(AnswerGroupService)
     .useValue(answerGroupServiceMock)
     .overrideProvider(FormService)
     .useValue(formServiceMock)
     .overrideProvider(MessagingService)
-    .useValue(messagingServiceMock);
+    .useValue(messagingServiceMock)
+    .overrideProvider(SecurityService)
+    .useValue(securityServiceMock);
 
   beforeAll(async () => {
     const CompiledModule = await ModuleRef.compile();
@@ -147,9 +159,34 @@ describe('Answers Controller', () => {
         },
       ]);
     });
-    it.todo(
-      'should return answers for all the companies user except the disabled teams if no teamId is provided on the parameter',
-    );
+    it('should return answers for all the companies user except the disabled teams if no teamId is provided on the parameter', async () => {
+      // arrange
+      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      formServiceMock.getRoutineForm.mockReturnValueOnce([
+        { type: 'emoji_scale', id: '1' },
+      ]);
+      answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
+        {
+          id: '1',
+          answers: [{ value: 3 }],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+      ]);
+
+      // act
+      await AnswersController.findAnswersFromTeam(userMock, undefined, {});
+
+      // assert
+      expect(securityServiceMock.isUserFromTeam).toBeCalledTimes(0);
+      expect(answerGroupServiceMock.answerGroups).toBeCalledTimes(1);
+      expect(messagingServiceMock.sendMessage.mock.calls[0][1].filters).toEqual(
+        { resolveTree: true },
+      );
+      expect(messagingServiceMock.sendMessage.mock.calls[0][1].teamID).toBe(
+        userMock.companies[0].id,
+      );
+    });
     it("should return an array of the team's users with lastestStatusReply, timestamp and the id undefined if the user hasn't replied", async () => {
       // arrange
       messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);

@@ -23,6 +23,7 @@ import { AnswersService } from './services/answers.service';
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import configuration from './config/configuration';
 import { MessagingService } from './services/messaging.service';
+import { SecurityService } from './services/security.service';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { MessagingService } from './services/messaging.service';
     CronService,
     FormService,
     MessagingService,
+    SecurityService,
   ],
 })
 export class AppModule implements NestModule {

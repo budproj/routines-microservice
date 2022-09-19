@@ -13,6 +13,7 @@ import { FormService } from '../../services/form.service';
 import { User as UserType } from '../../types/User';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { MessagingService } from '../../services/messaging.service';
+import { SecurityService } from '../../services/security.service';
 
 interface FindAnswersQuery {
   before?: string;
@@ -39,29 +40,25 @@ export class AnswersController {
     private nats: MessagingService,
     private answerGroupService: AnswerGroupService,
     private formService: FormService,
+    private securityService: SecurityService,
   ) {}
 
-  @Get('/summary/:teamId')
+  @Get('/summary/:teamId?')
   async findAnswersFromTeam(
     @User() user: UserType,
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
   ): Promise<AnswerOverview[]> {
-    const isUserFromTeam = user.teams.some((team) => team.id === teamId);
-
-    if (!isUserFromTeam) {
-      throw new HttpException(
-        "User isn't a member of the team ",
-        HttpStatus.UNAUTHORIZED,
-      );
+    if (teamId) {
+      await this.securityService.isUserFromTeam(user, teamId);
     }
 
     const usersFromTeam = await this.nats.sendMessage<
       MessagingQuery,
       UserType[]
     >('core-ports.get-users-from-team', {
-      teamID: teamId,
-      filters: { resolveTree: query.includeSubteams },
+      teamID: teamId ?? user.companies[0].id,
+      filters: { resolveTree: teamId ? query.includeSubteams : true },
     });
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
