@@ -5,6 +5,7 @@ import { AnswersService } from '../../services/answers.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
+import { budRoutinePtBrForm } from '../../shared/providers/form-provider/bud-routine-ptBR';
 
 @Controller('/answer')
 export class AnswerController {
@@ -23,6 +24,27 @@ export class AnswerController {
       id: userId,
       teams,
     } = user;
+
+    const requiredQuestionsIDs = budRoutinePtBrForm.reduce(
+      (results, { id, required }) => {
+        if (typeof required === 'boolean' && required === true)
+          results.push(id);
+        return results;
+      },
+      [],
+    );
+
+    let matchedMandatoryQuestions = 0;
+    requiredQuestionsIDs.forEach((requiredQuestion) => {
+      for (let i = 0; i < answers.length; i++) {
+        if (answers[i].questionId === requiredQuestion)
+          matchedMandatoryQuestions++;
+      }
+    });
+
+    if (matchedMandatoryQuestions < requiredQuestionsIDs.length) {
+      throw new Error('All mandatory questions must be answered.');
+    }
 
     const { id } = await this.answerGroupService.createAnswerGroup({
       companyId: company.id,
