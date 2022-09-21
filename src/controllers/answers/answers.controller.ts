@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { User } from '../../decorators/user.decorator';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -14,6 +7,8 @@ import { User as UserType } from '../../types/User';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
+import { groupBy, meanBy } from 'lodash';
+import { AnswerGroupWithAnswers } from 'src/types/AnswerGroupWithAnswers';
 
 interface FindAnswersQuery {
   before?: string;
@@ -99,5 +94,102 @@ export class AnswersController {
       };
     });
     return formattedAnswerOverview;
+  }
+
+  @Get('/overview/:teamId')
+  async findOverviewFromTeam(
+    @User() user: UserType,
+    @Param('teamId') teamId: string,
+    @Query('includeSubteams')
+    includeSubteams?: FindAnswersQuery['includeSubteams'],
+  ) {
+    if (teamId) {
+      await this.securityService.isUserFromTeam(user, teamId);
+    }
+
+    const usersFromTeam = await this.nats.sendMessage<
+      MessagingQuery,
+      UserType[]
+    >('core-ports.get-users-from-team', {
+      teamID: teamId ?? user.companies[0].id,
+      filters: { resolveTree: teamId ? includeSubteams : true },
+    });
+
+    const usersFromTeamIds = usersFromTeam.map((user) => user.id);
+
+    const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
+
+    const rangeQuestions = form.filter(
+      (question) =>
+        question.type === 'emoji_scale' || question.type === 'value_range',
+    );
+
+    const rangeQuestionsId = rangeQuestions.map((question) => question.id);
+
+    const today = new Date();
+    const threeMonthsBefore = new Date(
+      new Date().setDate(new Date().getDate() - 92),
+    );
+
+    const answerGroups = await this.answerGroupService.answerGroups({
+      where: {
+        userId: { in: usersFromTeamIds },
+        timestamp: { lte: today, gte: threeMonthsBefore },
+      },
+      include: {
+        answers: {
+          where: {
+            questionId: { in: rangeQuestionsId },
+          },
+        },
+      },
+    });
+
+    if (!answerGroups.length) {
+      return [];
+    }
+
+    const answerGroupsWithTimestamp = answerGroups.map((answerGroup) => {
+      return this.answerGroupService.parseAnswerTimestamp(answerGroup);
+    });
+
+    const groupedAnswerGroupsByTimestamp = Object.values(
+      groupBy(answerGroupsWithTimestamp, 'timestamp'),
+    );
+
+    const answerGroupsByQuestions = rangeQuestionsId.map((questionId) => {
+      return groupedAnswerGroupsByTimestamp.map((groupedAnswerWeek) => {
+        const answerGroupWithQuestionAnswers = groupedAnswerWeek.reduce<
+          Partial<AnswerGroupWithAnswers>
+        >(
+          (acc, answerGroup) => {
+            const questionAnswer = answerGroup.answers.find(
+              (answer) => answer.questionId === questionId,
+            );
+
+            return {
+              ...answerGroup,
+              answers: [...acc.answers, questionAnswer],
+            };
+          },
+          { answers: [] },
+        );
+        const mean = meanBy(answerGroupWithQuestionAnswers.answers, 'value');
+
+        return {
+          timestamp: answerGroupWithQuestionAnswers.timestamp,
+          average: mean,
+        };
+      });
+    });
+
+    const [feeling, productivity] = answerGroupsByQuestions;
+
+    return {
+      overview: {
+        feeling,
+        productivity,
+      },
+    };
   }
 }

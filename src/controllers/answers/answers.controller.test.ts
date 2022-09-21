@@ -13,6 +13,7 @@ beforeEach(jest.resetAllMocks);
 describe('Answers Controller', () => {
   const answerGroupServiceMock = {
     answerGroups: jest.fn(),
+    parseAnswerTimestamp: jest.fn(),
   };
   const messagingServiceMock = {
     sendMessage: jest.fn(),
@@ -212,6 +213,150 @@ describe('Answers Controller', () => {
           timestamp: undefined,
         },
       ]);
+    });
+  });
+  describe('findOverviewFromTeam', () => {
+    it('should return an object of overview containing the feeling and productivity with an empty array', async () => {
+      // arrange
+      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      formServiceMock.getRoutineForm.mockReturnValueOnce([
+        { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+      ]);
+      answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
+
+      // act
+      const teamOverview = await AnswersController.findOverviewFromTeam(
+        userMock,
+        userMock.teams[0].id,
+      );
+      // assert
+      expect(teamOverview).toEqual([]);
+    });
+    it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
+      // arrange
+      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      formServiceMock.getRoutineForm.mockReturnValueOnce([
+        { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+      ]);
+      const answerGroupsMocks = [
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+      ];
+      answerGroupServiceMock.answerGroups.mockResolvedValueOnce(
+        answerGroupsMocks,
+      );
+
+      answerGroupsMocks.forEach((mock) =>
+        answerGroupServiceMock.parseAnswerTimestamp.mockReturnValueOnce(mock),
+      );
+
+      // act
+      const teamOverview = await AnswersController.findOverviewFromTeam(
+        userMock,
+        userMock.teams[0].id,
+      );
+      // assert
+      expect(teamOverview).toEqual({
+        overview: {
+          feeling: [
+            {
+              average: 1,
+              timestamp: '2022-09-15T11:09:31.143Z',
+            },
+          ],
+          productivity: [
+            {
+              average: 3,
+              timestamp: '2022-09-15T11:09:31.143Z',
+            },
+          ],
+        },
+      });
+    });
+
+    it('should return an object of overview containing the feeling and productivity weekly mean from team and subteams users answers', async () => {
+      // arrange
+      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      formServiceMock.getRoutineForm.mockReturnValueOnce([
+        { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+      ]);
+      const answerGroupsMocks = [
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+      ];
+      answerGroupServiceMock.answerGroups.mockResolvedValueOnce(
+        answerGroupsMocks,
+      );
+
+      answerGroupsMocks.forEach((mock) =>
+        answerGroupServiceMock.parseAnswerTimestamp.mockReturnValueOnce(mock),
+      );
+      // act
+      await AnswersController.findOverviewFromTeam(
+        userMock,
+        userMock.teams[0].id,
+        true,
+      );
+      // assert
+      expect(messagingServiceMock.sendMessage).toBeCalledTimes(1);
+      expect(messagingServiceMock.sendMessage.mock.calls[0][1].filters).toEqual(
+        {
+          resolveTree: true,
+        },
+      );
     });
   });
 });
