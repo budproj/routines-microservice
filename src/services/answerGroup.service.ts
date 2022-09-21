@@ -7,7 +7,7 @@ import * as weekOfYear from 'dayjs/plugin/weekOfYear';
 import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { User } from '../types/User';
 import { AnswerGroupWithAnswers } from '../types/AnswerGroupWithAnswers';
-import getDateOfISOWeek from 'src/shared/helpers/get-date-of-iso-week';
+import getDateOfISOWeek from '../shared/helpers/get-date-of-iso-week';
 
 @Injectable()
 export class AnswerGroupService {
