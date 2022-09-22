@@ -79,7 +79,7 @@ export const budRoutineEnForm: Array<FormQuestion> = [
     conditional: {
       dependsOn: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
       type: 'road_block',
-      roadblock: true,
+      road_block: true,
     },
   },
   {
