@@ -2,7 +2,6 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
-import { AnswersService } from '../../services/answers.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
