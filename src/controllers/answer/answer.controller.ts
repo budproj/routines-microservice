@@ -28,8 +28,6 @@ export class AnswerController {
       .filter((question) => question.required)
       .map((question) => question.id);
 
-    console.log({ answers });
-
     const allRequiredAnswersHaveBeenFilled = requiredQuestionIds.every(
       (requiredQuestionId) => {
         const answer = answers.find(
