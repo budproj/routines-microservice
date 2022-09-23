@@ -61,14 +61,58 @@ describe('Answer Controller', () => {
         {
           id: randomUUID(),
           answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
-          questionId: 'c97dcf60-2254-49b2-808b-a737b3142b40',
-          value: 'respostinha 1 rs',
+          hidden: false,
+          questionId: '44bd7498-e528-4f96-b45e-3a2374790373',
+          value: '2',
         },
         {
           id: randomUUID(),
           answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
-          questionId: 'c97dcf60-2254-49b2-808b-a737b3142b40',
-          value: 'respostinha 2 rs',
+          hidden: false,
+          questionId: 'd81e7754-79be-4638-89f3-a74875772d00',
+          value: 'tava benzao',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: true,
+          questionId: 'f0c6e297-7eb7-4b48-869c-aec96240ba2b',
+          value: 'muita coisa pra fazer',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '95b84e67-d5b6-4fcf-938a-b4c9897596cb',
+          value: 'tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'a1d5b993-9430-40bb-8f0f-47cda69720b9',
+          value: 'outras tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
+          value: 'n',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
+          value: 'uns bagulhos ai',
         },
       ];
       const registeredAnswers = await AnswerController.registerAnswers(
@@ -77,6 +121,40 @@ describe('Answer Controller', () => {
       );
 
       expect(registeredAnswers).toEqual(userMock.teams);
+    });
+
+    it('should not be able to register form answers if a required answer is not answered ', async () => {
+      answerGroupServiceMock.createAnswerGroup.mockResolvedValueOnce(
+        '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+      );
+      answerServiceMock.createAnswer.mockResolvedValueOnce(null);
+      const answers = [
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '44bd7498-e528-4f96-b45e-3a2374790373',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd81e7754-79be-4638-89f3-a74875772d00',
+          value: 'tava benzao',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
+          value: 'uns bagulhos ai',
+        },
+      ];
+
+      await expect(
+        AnswerController.registerAnswers(userMock, answers),
+      ).rejects.toBeInstanceOf(Error);
     });
   });
 });
