@@ -53,6 +53,7 @@ describe('Pending Routines Controller', () => {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
     companies: [routineSettingsMock],
     teams: [{ id: '968e8d90-c1dd-4d5c-948a-067e070ea269' }],
+    permissions: [],
   };
 
   const answerMock = {

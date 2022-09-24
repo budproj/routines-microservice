@@ -29,9 +29,9 @@ export class UserValidatorMiddleware implements NestMiddleware {
     }
 
     const [_, token] = authHeader.split(' ');
-    const decodedToken = await lastValueFrom<JwtPayload>(
-      this.nats.send('core-ports.verify-token', token),
-    );
+    const decodedToken = await lastValueFrom<
+      JwtPayload & { permissions: string[] }
+    >(this.nats.send('core-ports.verify-token', token));
 
     const user = await lastValueFrom<User>(
       this.nats.send('core-ports.get-user-with-teams-by-sub', decodedToken.sub),
@@ -44,6 +44,7 @@ export class UserValidatorMiddleware implements NestMiddleware {
     req.user = {
       ...user,
       companies: userCompanies,
+      permissions: decodedToken.permissions,
     };
 
     this.logger.log('Injecting user data', req.user);
