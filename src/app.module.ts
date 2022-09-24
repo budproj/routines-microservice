@@ -15,6 +15,7 @@ import { RoutineSettingsService } from './services/routineSettings.service';
 import { AnswerGroupService } from './services/answerGroup.service';
 import { CronService } from './services/cron.service';
 import { FormService } from './services/form.service';
+import { SecurityService } from './services/security.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
@@ -60,6 +61,7 @@ import configuration from './config/configuration';
     AnswersService,
     CronService,
     FormService,
+    SecurityService,
   ],
 })
 export class AppModule implements NestModule {
