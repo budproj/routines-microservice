@@ -1,6 +1,6 @@
 import { Body, Controller, Inject, Param, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { RoutineSettings } from '@prisma/client';
+import { Prisma, RoutineSettings } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
 import { SecurityService } from '../../services/security.service';
@@ -8,6 +8,8 @@ import { User as UserType } from '../../types/User';
 
 import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
+import { lastValueFrom } from 'rxjs';
+import { Team } from 'src/types/Team';
 import { SettingsWithoutCompany } from 'src/types/Settings';
 
 @Controller('/settings')
@@ -18,6 +20,22 @@ export class SettingsController {
     private cron: CronService,
     private security: SecurityService,
   ) {}
+
+  @Post('')
+  async globalRoutineSettingsCreation(
+    @User() user: UserType,
+    @Body() settings: SettingsWithoutCompany,
+  ) {
+    this.security.userHasPermission(user.permissions, 'routines:update:any');
+
+    const companies = await lastValueFrom<Team[]>(
+      this.nats.send('core-ports.get-companies', {}),
+    );
+
+    companies.forEach((company) => {
+      this.createSettings(user, company.id, settings);
+    });
+  }
 
   @Post('/:companyId')
   async createSettings(

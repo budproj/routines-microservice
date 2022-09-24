@@ -122,4 +122,51 @@ describe('Settings Controller', () => {
       expect(savedRoutine).toEqual(settings);
     });
   });
+
+  describe('globalRoutineSettingsCreation', () => {
+    it("should throw an error if the user doesn't the team:update:any role", async () => {
+      // arrange
+      const userWithoutPermission = {
+        ...userMock,
+        permissions: [],
+      };
+
+      expect(() =>
+        controller.globalRoutineSettingsCreation(
+          userWithoutPermission,
+          settings,
+        ),
+      ).rejects.toBeInstanceOf(Error);
+    });
+
+    it('should query all existing companies', async () => {
+      lastValueFromMock.mockResolvedValueOnce([]);
+
+      await controller.globalRoutineSettingsCreation(userMock, settings);
+
+      expect(sendMock).toBeCalledTimes(1);
+      expect(sendMock).toBeCalledWith('core-ports.get-companies', {});
+    });
+
+    it('should create the routine settings for each company', async () => {
+      const createSettingsMock = jest.spyOn(controller, 'createSettings');
+      createSettingsMock.mockResolvedValue({
+        id: randomUUID(),
+        companyId: company.id,
+        ...settings,
+      });
+      const otherCompany = { ...company, id: randomUUID() };
+      lastValueFromMock.mockResolvedValueOnce([company, otherCompany]);
+
+      await controller.globalRoutineSettingsCreation(userMock, settings);
+
+      expect(createSettingsMock).toBeCalledTimes(2);
+      expect(createSettingsMock).toBeCalledWith(userMock, company.id, settings);
+      expect(createSettingsMock).toBeCalledWith(
+        userMock,
+        otherCompany.id,
+        settings,
+      );
+    });
+  });
 });
