@@ -8,6 +8,7 @@ import { PendingRoutinesController } from './controllers/pending-routines/pendin
 import { NatsController } from './controllers/nats/nats.controller';
 import { FormControler } from './controllers/forms/form.controller';
 import { AnswersController } from './controllers/answers/answers.controller';
+import { SettingsController } from './controllers/settings/settings.controller';
 
 import { HealthCheckDBService } from './services/healthcheck.db.service';
 import { RoutineService } from './services/routines.service';
@@ -52,6 +53,7 @@ import { SecurityService } from './services/security.service';
     FormControler,
     AnswerController,
     AnswersController,
+    SettingsController,
   ],
   providers: [
     HealthCheckDBService,
@@ -76,6 +78,7 @@ export class AppModule implements NestModule {
         FormControler,
         AnswerController,
         AnswersController,
+        SettingsController,
       );
   }
 }
