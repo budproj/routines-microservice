@@ -1,9 +1,14 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Inject, Param, Post } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { Prisma, RoutineSettings } from '@prisma/client';
+import { RoutineSettings } from '@prisma/client';
+
+import { User } from '../../decorators/user.decorator';
+import { SecurityService } from '../../services/security.service';
+import { User as UserType } from '../../types/User';
 
 import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
+import { SettingsWithoutCompany } from 'src/types/Settings';
 
 @Controller('/settings')
 export class SettingsController {
@@ -11,14 +16,25 @@ export class SettingsController {
     @Inject('NATS_SERVICE') private nats: ClientProxy,
     private routineSettings: RoutineSettingsService,
     private cron: CronService,
+    private security: SecurityService,
   ) {}
 
-  @Post()
+  @Post('/:companyId')
   async createSettings(
-    @Body() settings: Prisma.RoutineSettingsCreateInput,
+    @User() user: UserType,
+    @Param() companyId: string,
+    @Body() settings: SettingsWithoutCompany,
   ): Promise<RoutineSettings> {
+    this.security.userHasPermission(user.permissions, 'routines:update:own');
+    this.security.isUserFromCompany(user, companyId, 'routines:update:any');
+
+    const settingsWithCompany = {
+      ...settings,
+      companyId,
+    };
+
     const createdSettings = await this.routineSettings.createRoutineSettings(
-      settings,
+      settingsWithCompany,
     );
 
     const routineNotificationData = {
