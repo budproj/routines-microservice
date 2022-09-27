@@ -190,8 +190,6 @@ export class AnswersController {
 
         const mean = meanBy(answerValues);
 
-        console.log(answerGroupWithQuestionAnswers);
-
         return {
           timestamp: answerGroupWithQuestionAnswers.timestamp,
           average: mean,
