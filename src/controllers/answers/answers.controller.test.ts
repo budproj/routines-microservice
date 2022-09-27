@@ -24,7 +24,7 @@ describe('Answers Controller', () => {
   };
 
   const securityServiceMock = {
-    isUserFromTeam: jest.fn(),
+    isUserFromCompany: jest.fn(),
   };
 
   const routineSettingsMock = {
@@ -84,7 +84,9 @@ describe('Answers Controller', () => {
         lte: new Date(query.before),
         gte: new Date(query.after),
       };
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
       ]);
@@ -106,7 +108,9 @@ describe('Answers Controller', () => {
     it("should request the team and subteams's users info if includeSubteam query is set", async () => {
       // arrange
 
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
       ]);
@@ -120,8 +124,8 @@ describe('Answers Controller', () => {
       );
 
       // assert
-      expect(messagingServiceMock.sendMessage).toBeCalledTimes(1);
-      expect(messagingServiceMock.sendMessage.mock.calls[0][1].filters).toEqual(
+      expect(messagingServiceMock.sendMessage).toBeCalledTimes(2);
+      expect(messagingServiceMock.sendMessage.mock.calls[1][1].filters).toEqual(
         {
           resolveTree: true,
         },
@@ -129,7 +133,9 @@ describe('Answers Controller', () => {
     });
     it("should return an array of the team's users with answer details", async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
       ]);
@@ -157,12 +163,15 @@ describe('Answers Controller', () => {
           picture: userMock.picture,
           latestStatusReply: 3,
           timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
         },
       ]);
     });
     it('should return answers for all the companies user except the disabled teams if no teamId is provided on the parameter', async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
       ]);
@@ -179,18 +188,20 @@ describe('Answers Controller', () => {
       await AnswersController.findAnswersFromTeam(userMock, undefined, {});
 
       // assert
-      expect(securityServiceMock.isUserFromTeam).toBeCalledTimes(0);
+      expect(securityServiceMock.isUserFromCompany).toBeCalledTimes(1);
       expect(answerGroupServiceMock.answerGroups).toBeCalledTimes(1);
-      expect(messagingServiceMock.sendMessage.mock.calls[0][1].filters).toEqual(
+      expect(messagingServiceMock.sendMessage.mock.calls[1][1].filters).toEqual(
         { resolveTree: true },
       );
-      expect(messagingServiceMock.sendMessage.mock.calls[0][1].teamID).toBe(
+      expect(messagingServiceMock.sendMessage.mock.calls[1][1].teamID).toBe(
         userMock.companies[0].id,
       );
     });
     it("should return an array of the team's users with lastestStatusReply, timestamp and the id undefined if the user hasn't replied", async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
       ]);
@@ -211,6 +222,7 @@ describe('Answers Controller', () => {
           picture: userMock.picture,
           latestStatusReply: undefined,
           timestamp: undefined,
+          userId: userMock.id,
         },
       ]);
     });
@@ -218,7 +230,9 @@ describe('Answers Controller', () => {
   describe('findOverviewFromTeam', () => {
     it('should return an object of overview containing the feeling and productivity with an empty array', async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -235,7 +249,9 @@ describe('Answers Controller', () => {
     });
     it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -303,7 +319,9 @@ describe('Answers Controller', () => {
 
     it('should return an object of overview containing the feeling and productivity weekly mean from team and subteams users answers', async () => {
       // arrange
-      messagingServiceMock.sendMessage.mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -351,8 +369,8 @@ describe('Answers Controller', () => {
         true,
       );
       // assert
-      expect(messagingServiceMock.sendMessage).toBeCalledTimes(1);
-      expect(messagingServiceMock.sendMessage.mock.calls[0][1].filters).toEqual(
+      expect(messagingServiceMock.sendMessage).toBeCalledTimes(2);
+      expect(messagingServiceMock.sendMessage.mock.calls[1][1].filters).toEqual(
         {
           resolveTree: true,
         },

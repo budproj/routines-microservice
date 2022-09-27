@@ -7,8 +7,9 @@ import { User as UserType } from '../../types/User';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
-import { groupBy, meanBy } from 'lodash';
+import { groupBy, meanBy, orderBy } from 'lodash';
 import { AnswerGroupWithAnswers } from 'src/types/AnswerGroupWithAnswers';
+import { Team } from 'src/types/Team';
 
 interface FindAnswersQuery {
   before?: string;
@@ -44,9 +45,12 @@ export class AnswersController {
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
   ): Promise<AnswerOverview[]> {
-    if (teamId) {
-      await this.securityService.isUserFromTeam(user, teamId);
-    }
+    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
+      'core-ports.get-team-company',
+      { id: teamId ?? user.companies[0].id },
+    );
+
+    this.securityService.isUserFromCompany(user, company.id);
 
     const usersFromTeam = await this.nats.sendMessage<
       MessagingQuery,
@@ -85,6 +89,7 @@ export class AnswersController {
 
       return {
         id: answerGroup?.id,
+        userId: user.id,
         name: `${user.firstName} ${user.lastName}`,
         picture: user.picture,
         latestStatusReply: answerGroup?.answers[0].value
@@ -93,7 +98,8 @@ export class AnswersController {
         timestamp: answerGroup?.timestamp,
       };
     });
-    return formattedAnswerOverview;
+
+    return orderBy(formattedAnswerOverview, 'timestamp');
   }
 
   @Get('/overview/:teamId')
@@ -103,9 +109,12 @@ export class AnswersController {
     @Query('includeSubteams')
     includeSubteams?: FindAnswersQuery['includeSubteams'],
   ) {
-    if (teamId) {
-      await this.securityService.isUserFromTeam(user, teamId);
-    }
+    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
+      'core-ports.get-team-company',
+      { id: teamId ?? user.companies[0].id },
+    );
+
+    this.securityService.isUserFromCompany(user, company.id);
 
     const usersFromTeam = await this.nats.sendMessage<
       MessagingQuery,
@@ -174,7 +183,14 @@ export class AnswersController {
           },
           { answers: [] },
         );
-        const mean = meanBy(answerGroupWithQuestionAnswers.answers, 'value');
+
+        const answerValues = answerGroupWithQuestionAnswers.answers.map(
+          (answer) => Number(answer.value),
+        );
+
+        const mean = meanBy(answerValues);
+
+        console.log(answerGroupWithQuestionAnswers);
 
         return {
           timestamp: answerGroupWithQuestionAnswers.timestamp,
