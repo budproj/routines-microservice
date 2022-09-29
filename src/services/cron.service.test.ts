@@ -8,6 +8,8 @@ describe('Cron Service', () => {
   const cronService = new CronService();
   dayjs.extend(utc);
 
+  beforeEach(jest.clearAllMocks);
+
   describe('getWeeklyCron', () => {
     it('should return a cron expression for each day of week', () => {
       const sundayDate = new Date(2022, 7, 14);
@@ -109,6 +111,82 @@ describe('Cron Service', () => {
 
       // Assert
       expect(parsedCron).toBe(mockInterval);
+    });
+  });
+
+  describe('getTimespan', () => {
+    it('should return the timespam for a given cron expression', () => {
+      // arrange
+      const expression = cronParser.parseExpression('0 0 * * 5');
+
+      // act
+      const timespan = cronService.getTimespan(expression);
+
+      // assert
+      expect(timespan).toEqual({
+        startDate: dayjs('2022-09-30').utc().toDate(),
+        finishDate: dayjs('2022-10-06').utc().toDate(),
+      });
+    });
+  });
+
+  describe('getMultipleTimespan', () => {
+    it('should return x times in time before start getting the timespans', () => {
+      // arrange
+      const expression = cronParser.parseExpression('0 0 * * 5');
+      const prevSpy = jest.spyOn(expression, 'prev');
+      const getTimespanSpy = jest.spyOn(cronService, 'getTimespan');
+
+      // act
+      cronService.getMultipleTimespan(expression, 3);
+
+      // assert
+      expect(prevSpy).toBeCalledTimes(7);
+      expect(getTimespanSpy).toBeCalledTimes(3);
+    });
+
+    it('should return multiple timespans for a given cron expression', () => {
+      // arrange
+      const expression = cronParser.parseExpression('0 0 * * 5');
+
+      // act
+      const timespans = cronService.getMultipleTimespan(expression, 3);
+
+      // assert
+      expect(timespans).toEqual([
+        {
+          startDate: dayjs('2022-09-09').utc().toDate(),
+          finishDate: dayjs('2022-09-15').utc().toDate(),
+        },
+        {
+          startDate: dayjs('2022-09-16').utc().toDate(),
+          finishDate: dayjs('2022-09-22').utc().toDate(),
+        },
+        {
+          startDate: dayjs('2022-09-23').utc().toDate(),
+          finishDate: dayjs('2022-09-29').utc().toDate(),
+        },
+      ]);
+    });
+  });
+
+  describe('getCurrentExecutionDateFromTimestamp', () => {
+    it('should return the next execution date from a given cron starting at a given date', () => {
+      // arrange
+      const cron = '0 0 * * 5';
+      const date = new Date();
+      const parseSpy = jest.spyOn(cronParser, 'parseExpression');
+      const prevSpy = jest.spyOn(cronService, 'prev');
+
+      // act
+      const nextExecutionDate =
+        cronService.getCurrentExecutionDateFromTimestamp(cron, date);
+
+      // assert
+      expect(parseSpy).toBeCalledTimes(1);
+      expect(parseSpy).toBeCalledWith(cron, { currentDate: date });
+      expect(prevSpy).toBeCalledTimes(1);
+      expect(nextExecutionDate).toEqual(dayjs('2022-09-23').utc().toDate());
     });
   });
 });
