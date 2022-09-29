@@ -1,4 +1,4 @@
-interface ValueRangeProperties {
+export interface ValueRangeProperties {
   steps: number;
   labels: {
     left: string;
@@ -6,7 +6,7 @@ interface ValueRangeProperties {
     right: string;
   };
 }
-interface ConditionalTypeInfo {
+export interface ConditionalTypeInfo {
   dependsOn: string;
   type: string;
   roadblock?: boolean;
