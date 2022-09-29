@@ -227,6 +227,7 @@ describe('Answers Controller', () => {
       ]);
     });
   });
+
   describe('findOverviewFromTeam', () => {
     it('should return an object of overview containing the feeling and productivity with an empty array', async () => {
       // arrange
@@ -247,6 +248,7 @@ describe('Answers Controller', () => {
       // assert
       expect(teamOverview).toEqual([]);
     });
+
     it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
       // arrange
       messagingServiceMock.sendMessage

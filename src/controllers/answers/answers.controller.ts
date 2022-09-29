@@ -162,9 +162,9 @@ export class AnswersController {
       return this.answerGroupService.parseAnswerTimestamp(answerGroup);
     });
 
-    const groupedAnswerGroupsByTimestamp = Object.values(
-      groupBy(answerGroupsWithTimestamp, 'timestamp'),
-    );
+    const groupedAnswerGroupsByTimestamp = Object.values<
+      AnswerGroupWithAnswers[]
+    >(groupBy(answerGroupsWithTimestamp, 'timestamp'));
 
     const answerGroupsByQuestions = rangeQuestionsId.map((questionId) => {
       return groupedAnswerGroupsByTimestamp.map((groupedAnswerWeek) => {
