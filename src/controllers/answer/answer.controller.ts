@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
@@ -69,9 +69,9 @@ export class AnswerController {
     return teams;
   }
 
-  @Get(':answerId')
+  @Get()
   async getDetailedUserAnswer(
-    @Param('answerId') id: string,
+    @Query('answerId') id: string,
     @User() user: UserType,
   ) {
     const answerGroup = await this.answerGroupService.answerGroup({
@@ -120,8 +120,10 @@ export class AnswerController {
               settings.cron,
               timestamp,
             );
+
           return (
-            currentExecutionDate.getDate() === timespan.startDate.getDate()
+            currentExecutionDate.getUTCDate() ===
+            timespan.startDate.getUTCDate()
           );
         },
       );
@@ -180,9 +182,11 @@ export class AnswerController {
           return {
             ...formatedQuestion,
             values: [
-              ...previousAnswersFromThisQuestion,
+              ...previousAnswersFromThisQuestion.sort(function (x, y) {
+                return x.timestamp.getTime() - y.timestamp.getTime();
+              }),
               {
-                value: currentAnswerFromThisQuestion.value,
+                value: currentAnswerFromThisQuestion?.value,
                 timestamp: answerGroup.timestamp,
               },
             ],
@@ -190,7 +194,7 @@ export class AnswerController {
         }
         return {
           ...formatedQuestion,
-          value: currentAnswerFromThisQuestion.value,
+          value: currentAnswerFromThisQuestion?.value,
         };
       }
     });

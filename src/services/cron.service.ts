@@ -96,7 +96,7 @@ export class CronService {
   }
 
   getCurrentExecutionDateFromTimestamp(cron: string, date: Date): Date {
-    const cronExpression = cronParser.parseExpression(cron, {
+    const cronExpression = this.parse(cron, {
       currentDate: date,
     });
 
