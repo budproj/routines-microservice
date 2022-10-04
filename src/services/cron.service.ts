@@ -65,7 +65,7 @@ export class CronService {
   }
 
   getTimespan(cronExpression: cronParser.CronExpression): Timespan {
-    const startDate = cronExpression.next().toDate();
+    const startDate = cronExpression.prev().toDate();
     const finishDate = dayjs(cronExpression.next().toDate())
       .subtract(1, 'day')
       .toDate();
@@ -81,10 +81,6 @@ export class CronService {
     timesToReturnTime: number,
   ): Timespan[] {
     const multipleTimespans: Timespan[] = [];
-
-    for (let i = timesToReturnTime; i >= 0; i--) {
-      cronExpression.prev();
-    }
 
     for (let i = timesToReturnTime; i > 0; i--) {
       const timespan = this.getTimespan(cronExpression);
@@ -103,5 +99,16 @@ export class CronService {
     const nextExecutionDate = this.prev(cronExpression).toDate();
 
     return nextExecutionDate;
+  }
+
+  isSameExecutionTimeSpan(timespan, timestamp, cron) {
+    const currentExecutionDate = this.getCurrentExecutionDateFromTimestamp(
+      cron,
+      timestamp,
+    );
+
+    return (
+      currentExecutionDate.getUTCDate() === timespan.startDate.getUTCDate()
+    );
   }
 }

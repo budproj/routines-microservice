@@ -92,12 +92,17 @@ export class AnswerController {
       companyId: company.id,
     });
 
-    const cronExpression = this.cronService.parse(settings.cron);
+    const cronExpression = this.cronService.parse(settings.cron, {
+      utc: true,
+      currentDate: answerGroup.timestamp,
+    });
 
-    const historyTimespans = this.cronService.getMultipleTimespan(
-      cronExpression,
-      5,
-    );
+    cronExpression.next();
+    const secondCronExpressionExecution = cronExpression.next();
+
+    const historyTimespans = this.cronService
+      .getMultipleTimespan(cronExpression, 6)
+      .reverse();
 
     const currentAnswer = await this.answersService.answers({
       where: { answerGroup: answerGroup },
@@ -108,32 +113,27 @@ export class AnswerController {
       orderBy: { timestamp: 'desc' },
       where: {
         userId: user.id,
-        timestamp: { lt: answerGroup.timestamp },
+        id: { not: answerGroup.id },
+        timestamp: { lte: secondCronExpressionExecution.toDate() },
       },
     });
 
     const history = historyTimespans.map((timespan) => {
       const answeredHistory = [...previousAnswerGroups, answerGroup].find(
-        ({ timestamp }) => {
-          const currentExecutionDate =
-            this.cronService.getCurrentExecutionDateFromTimestamp(
-              settings.cron,
-              timestamp,
-            );
-
-          return (
-            currentExecutionDate.getUTCDate() ===
-            timespan.startDate.getUTCDate()
-          );
-        },
+        ({ timestamp }) =>
+          this.cronService.isSameExecutionTimeSpan(
+            timespan,
+            timestamp,
+            settings.cron,
+          ),
       );
-      if (!answeredHistory) {
-        return timespan;
-      }
-      return {
-        id: answeredHistory.id,
-        ...timespan,
-      };
+
+      return answeredHistory
+        ? {
+            id: answeredHistory.id,
+            ...timespan,
+          }
+        : timespan;
     });
 
     const previousAnswers = await this.answersService.answers({
@@ -171,25 +171,46 @@ export class AnswerController {
           formQuestion.type === 'road_block'
         ) {
           const previousAnswersFromThisQuestion = previousAnswers
-            ?.filter((answer) => answer.questionId === formQuestion.id)
-            .map(({ value, answerGroupId }) => ({
+            .filter((answer) => answer.questionId === formQuestion.id)
+            .map(({ id, value, answerGroupId }) => ({
+              id,
               value: value,
               timestamp: previousAnswerGroups.find(
                 ({ id }) => id === answerGroupId,
               ).timestamp,
-            }));
+            }))
+            .sort((x, y) => x.timestamp.getTime() - y.timestamp.getTime());
+
+          const values = [
+            ...previousAnswersFromThisQuestion,
+            {
+              id: currentAnswerFromThisQuestion.id,
+              value: currentAnswerFromThisQuestion?.value,
+              timestamp: answerGroup.timestamp,
+            },
+          ];
+
+          const history = historyTimespans.map((timespan) => {
+            const answeredRoadblock = values.find(({ timestamp }) =>
+              this.cronService.isSameExecutionTimeSpan(
+                timespan,
+                timestamp,
+                settings.cron,
+              ),
+            );
+
+            return (
+              answeredRoadblock ?? {
+                id: Math.random(),
+                value: null,
+                timestamp: timespan.startDate,
+              }
+            );
+          });
 
           return {
             ...formatedQuestion,
-            values: [
-              ...previousAnswersFromThisQuestion.sort(function (x, y) {
-                return x.timestamp.getTime() - y.timestamp.getTime();
-              }),
-              {
-                value: currentAnswerFromThisQuestion?.value,
-                timestamp: answerGroup.timestamp,
-              },
-            ],
+            values: formQuestion.type === 'road_block' ? history : values,
           };
         }
         return {
