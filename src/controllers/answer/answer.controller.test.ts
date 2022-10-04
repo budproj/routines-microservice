@@ -36,6 +36,7 @@ describe('Answer Controller', () => {
     picture: '',
     firstName: 'Morty',
     lastName: 'Smith',
+    permissions: [],
   };
 
   let AnswerController: AnswerControllerClass;

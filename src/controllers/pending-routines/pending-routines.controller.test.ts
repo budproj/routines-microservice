@@ -56,6 +56,7 @@ describe('Pending Routines Controller', () => {
     picture: '',
     firstName: 'Morty',
     lastName: 'Smith',
+    permissions: [],
   };
 
   const answerMock = {

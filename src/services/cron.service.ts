@@ -53,4 +53,28 @@ export class CronService {
 
     return daysOutdated;
   }
+
+  addDaysToCron(cron: string, daysToAdd: number): string {
+    const cronData = cron
+      .split(' ')
+      .map((step, index, steps) => {
+        if (index === steps.length - 1) {
+          if (step === '*') {
+            return step;
+          }
+
+          const cronDaysMaxRange = 6;
+          const nextStepDay = Number(step) + daysToAdd;
+
+          return nextStepDay > cronDaysMaxRange
+            ? nextStepDay - cronDaysMaxRange
+            : nextStepDay;
+        }
+
+        return step;
+      })
+      .join(' ');
+
+    return cronData;
+  }
 }

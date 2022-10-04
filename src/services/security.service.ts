@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User as UserType } from '../types/User';
+
+import { User, User as UserType } from '../types/User';
 import { Team } from '../types/Team';
 
 @Injectable()
@@ -12,10 +13,37 @@ export class SecurityService {
       );
     }
   }
-  isUserFromCompany(user: UserType, teamId: Team['id']) {
-    if (user.companies.some((company) => company.id !== teamId)) {
+
+  userHasPermission(
+    userPermissions: User['permissions'],
+    permissionToCheck: string,
+  ): boolean {
+    if (!userPermissions.includes(permissionToCheck)) {
       throw new HttpException(
-        "User isn't a member of the company ",
+        "User doesn't have permission to execute this action",
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    return true;
+  }
+
+  isUserFromCompany(
+    user: UserType,
+    companyId: Team['id'],
+    adminRoleToCheck?: string,
+  ) {
+    const isUserFromCompany = user.companies.some(
+      (company) => company.id === companyId,
+    );
+
+    const hasAdminRole = adminRoleToCheck
+      ? this.userHasPermission(user.permissions, adminRoleToCheck)
+      : false;
+
+    if (!isUserFromCompany && !hasAdminRole) {
+      throw new HttpException(
+        "User isn't a member of this company",
         HttpStatus.UNAUTHORIZED,
       );
     }
