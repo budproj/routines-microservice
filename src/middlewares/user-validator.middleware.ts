@@ -10,8 +10,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Request, Response, NextFunction } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import { lastValueFrom } from 'rxjs';
-import { Team } from 'src/types/Team';
 
+import { Team } from 'src/types/Team';
 import { User } from 'src/types/User';
 
 @Injectable()

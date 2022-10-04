@@ -43,7 +43,7 @@ export class SecurityService {
 
     if (!isUserFromCompany && !hasAdminRole) {
       throw new HttpException(
-        "User isn't a member of this company ",
+        "User isn't a member of this company",
         HttpStatus.UNAUTHORIZED,
       );
     }
