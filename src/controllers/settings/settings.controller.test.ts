@@ -54,6 +54,9 @@ describe('Settings Controller', () => {
 
   const userMock: User = {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
+    firstName: 'Test',
+    lastName: 'Tester',
+    picture: 'abc.jpg',
     companies: [],
     teams: [],
     permissions: ['routines:update:own', 'routines:update:any'],

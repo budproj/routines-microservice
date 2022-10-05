@@ -17,6 +17,7 @@ import { AnswerGroupService } from './services/answerGroup.service';
 import { CronService } from './services/cron.service';
 import { FormService } from './services/form.service';
 import { SecurityService } from './services/security.service';
+import { MessagingService } from './services/messaging.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
@@ -24,8 +25,6 @@ import { AnswersService } from './services/answers.service';
 
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import configuration from './config/configuration';
-import { MessagingService } from './services/messaging.service';
-import { SecurityService } from './services/security.service';
 
 @Module({
   imports: [
