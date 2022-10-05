@@ -2,14 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { AnswerGroup, Prisma } from '@prisma/client';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
+import * as weekOfYear from 'dayjs/plugin/weekOfYear';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { User } from '../types/User';
+import { AnswerGroupWithAnswers } from '../types/AnswerGroupWithAnswers';
+import getDateOfISOWeek from '../shared/helpers/get-date-of-iso-week';
 
 @Injectable()
 export class AnswerGroupService {
   constructor(private prisma: PrismaService) {
     dayjs.extend(utc);
+    dayjs.extend(weekOfYear);
   }
 
   async answerGroup(
@@ -26,14 +30,16 @@ export class AnswerGroupService {
     cursor?: Prisma.AnswerGroupWhereUniqueInput;
     where?: Prisma.AnswerGroupWhereInput;
     orderBy?: Prisma.AnswerGroupOrderByWithRelationInput;
-  }): Promise<AnswerGroup[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    include?: Prisma.AnswerGroupInclude;
+  }): Promise<AnswerGroupWithAnswers[]> {
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.answerGroup.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 
@@ -94,5 +100,18 @@ export class AnswerGroupService {
     const answeredWithinTimeSpan =
       differenceInDaysFromToday <= timeSpanForAnwser;
     return answeredWithinTimeSpan;
+  }
+
+  parseAnswerTimestamp(answerGroup: AnswerGroup): AnswerGroupWithAnswers {
+    const dayJsTimestamp = dayjs(answerGroup.timestamp);
+    const week = dayJsTimestamp.week();
+    const year = dayJsTimestamp.format('YYYY');
+
+    const newTimestamp = getDateOfISOWeek(week, year);
+
+    return {
+      ...answerGroup,
+      timestamp: newTimestamp,
+    };
   }
 }

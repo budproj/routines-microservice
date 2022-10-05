@@ -34,6 +34,7 @@ describe('Answer Controller', () => {
     parse: jest.fn(),
     getMultipleTimespan: jest.fn(),
     getCurrentExecutionDateFromTimestamp: jest.fn(),
+    isSameExecutionTimeSpan: jest.fn(),
   };
 
   const routineSettingsMock = {
@@ -77,6 +78,10 @@ describe('Answer Controller', () => {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
     companies: [{ id: routineSettingsMock.companyId }],
     teams: [{ id: '968e8d90-c1dd-4d5c-948a-067e070ea269' }],
+    picture: '',
+    firstName: 'Morty',
+    lastName: 'Smith',
+    permissions: [],
   };
 
   const answerGroupsMock = [
@@ -250,6 +255,8 @@ describe('Answer Controller', () => {
         cronGetCurrentExecutionDateFromTimestampMock,
       );
 
+      cronServiceMock.isSameExecutionTimeSpan.mockReturnValue(true);
+
       const answer = [
         {
           id: randomUUID(),
@@ -297,6 +304,7 @@ describe('Answer Controller', () => {
           id: randomUUID(),
           answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
           hidden: false,
+          type: 'road_block',
           questionId: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
           value: 'y',
         },
@@ -322,30 +330,35 @@ describe('Answer Controller', () => {
         userMock,
       );
 
+      const history = [
+        {
+          id: answerGroupsMock[0].id,
+          startDate: new Date('2022-08-26'),
+          finishDate: new Date('2022-09-01'),
+        },
+        {
+          id: answerGroupsMock[0].id,
+          startDate: new Date('2022-09-02'),
+          finishDate: new Date('2022-09-08'),
+        },
+        {
+          id: answerGroupsMock[0].id,
+          startDate: new Date('2022-09-09'),
+          finishDate: new Date('2022-09-15'),
+        },
+        {
+          id: answerGroupsMock[0].id,
+          startDate: new Date('2022-09-16'),
+          finishDate: new Date('2022-09-22'),
+        },
+        {
+          id: answerGroupsMock[0].id,
+          startDate: new Date('2022-09-23'),
+          finishDate: new Date('2022-09-29'),
+        },
+      ].reverse();
       const expectedAnswersDetailed = {
-        history: [
-          {
-            startDate: new Date('2022-08-26'),
-            finishDate: new Date('2022-09-01'),
-          },
-          {
-            startDate: new Date('2022-09-02'),
-            finishDate: new Date('2022-09-08'),
-          },
-          {
-            startDate: new Date('2022-09-09'),
-            finishDate: new Date('2022-09-15'),
-          },
-          {
-            id: answerGroupsMock[0].id,
-            startDate: new Date('2022-09-16'),
-            finishDate: new Date('2022-09-22'),
-          },
-          {
-            startDate: new Date('2022-09-23'),
-            finishDate: new Date('2022-09-29'),
-          },
-        ],
+        history,
         answers: [
           {
             id: '44bd7498-e528-4f96-b45e-3a2374790373',
@@ -353,10 +366,12 @@ describe('Answer Controller', () => {
             type: 'emoji_scale',
             values: [
               {
+                id: answer[0].id,
                 value: '2',
                 timestamp: new Date(answerGroupsMock[0].timestamp),
               },
               {
+                id: answer[0].id,
                 value: '2',
                 timestamp: new Date(answerGroupMock.timestamp),
               },
@@ -367,6 +382,9 @@ describe('Answer Controller', () => {
             heading: 'Qual o principal motivo da sua resposta?',
             type: 'long_text',
             value: 'tava benzao',
+            conditional: {
+              dependsOn: '44bd7498-e528-4f96-b45e-3a2374790373',
+            },
           },
           {
             id: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
@@ -374,10 +392,12 @@ describe('Answer Controller', () => {
             type: 'value_range',
             values: [
               {
+                id: answer[2].id,
                 value: '2',
                 timestamp: new Date(answerGroupsMock[0].timestamp),
               },
               {
+                id: answer[2].id,
                 value: '2',
                 timestamp: new Date(answerGroupMock.timestamp),
               },
@@ -411,12 +431,29 @@ describe('Answer Controller', () => {
             type: 'road_block',
             values: [
               {
-                value: 'y',
-                timestamp: new Date(answerGroupsMock[0].timestamp),
+                id: answer[6].id,
+                value: answer[6].value,
+                timestamp: answerGroupsMock[0].timestamp,
               },
               {
-                value: 'y',
-                timestamp: new Date(answerGroupMock.timestamp),
+                id: answer[6].id,
+                value: answer[6].value,
+                timestamp: answerGroupsMock[0].timestamp,
+              },
+              {
+                id: answer[6].id,
+                value: answer[6].value,
+                timestamp: answerGroupsMock[0].timestamp,
+              },
+              {
+                id: answer[6].id,
+                value: answer[6].value,
+                timestamp: answerGroupsMock[0].timestamp,
+              },
+              {
+                id: answer[6].id,
+                value: answer[6].value,
+                timestamp: answerGroupsMock[0].timestamp,
               },
             ],
           },

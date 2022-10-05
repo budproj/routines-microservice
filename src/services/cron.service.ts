@@ -93,22 +93,44 @@ export class CronService {
 
   getCurrentExecutionDateFromTimestamp(cron: string, date: Date): Date {
     const cronExpression = this.parse(cron, {
+      utc: true,
       currentDate: date,
     });
 
-    const nextExecutionDate = this.prev(cronExpression).toDate();
-
+    const nextExecutionDate = cronExpression.prev().toDate();
     return nextExecutionDate;
   }
 
-  isSameExecutionTimeSpan(timespan, timestamp, cron) {
+  isSameExecutionTimeSpan(timespan: Date, timestamp: Date, cron: string) {
     const currentExecutionDate = this.getCurrentExecutionDateFromTimestamp(
       cron,
       timestamp,
     );
 
-    return (
-      currentExecutionDate.getUTCDate() === timespan.startDate.getUTCDate()
-    );
+    return currentExecutionDate.getUTCDate() === timespan.getUTCDate();
+  }
+
+  addDaysToCron(cron: string, daysToAdd: number): string {
+    const cronData = cron
+      .split(' ')
+      .map((step, index, steps) => {
+        if (index === steps.length - 1) {
+          if (step === '*') {
+            return step;
+          }
+
+          const cronDaysMaxRange = 6;
+          const nextStepDay = Number(step) + daysToAdd;
+
+          return nextStepDay > cronDaysMaxRange
+            ? nextStepDay - cronDaysMaxRange
+            : nextStepDay;
+        }
+
+        return step;
+      })
+      .join(' ');
+
+    return cronData;
   }
 }

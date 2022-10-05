@@ -141,13 +141,16 @@ describe('Cron Service', () => {
       cronService.getMultipleTimespan(expression, 3);
 
       // assert
-      expect(prevSpy).toBeCalledTimes(7);
+      expect(prevSpy).toBeCalledTimes(6);
       expect(getTimespanSpy).toBeCalledTimes(3);
     });
 
     it('should return multiple timespans for a given cron expression', () => {
       // arrange
-      const expression = cronParser.parseExpression('0 0 * * 5');
+      const expression = cronParser.parseExpression('0 0 * * 5', {
+        utc: true,
+        currentDate: new Date('2022-09-30'),
+      });
 
       // act
       const timespans = cronService.getMultipleTimespan(expression, 3);
@@ -155,16 +158,16 @@ describe('Cron Service', () => {
       // assert
       expect(timespans).toEqual([
         {
-          startDate: dayjs('2022-09-09').utc().toDate(),
-          finishDate: dayjs('2022-09-15').utc().toDate(),
+          startDate: new Date('2022-09-23'),
+          finishDate: new Date('2022-09-29'),
         },
         {
-          startDate: dayjs('2022-09-16').utc().toDate(),
-          finishDate: dayjs('2022-09-22').utc().toDate(),
+          startDate: new Date('2022-09-16'),
+          finishDate: new Date('2022-09-22'),
         },
         {
-          startDate: dayjs('2022-09-23').utc().toDate(),
-          finishDate: dayjs('2022-09-29').utc().toDate(),
+          startDate: new Date('2022-09-09'),
+          finishDate: new Date('2022-09-15'),
         },
       ]);
     });
@@ -174,19 +177,66 @@ describe('Cron Service', () => {
     it('should return the next execution date from a given cron starting at a given date', () => {
       // arrange
       const cron = '0 0 * * 5';
-      const date = new Date();
-      const parseSpy = jest.spyOn(cronParser, 'parseExpression');
-      const prevSpy = jest.spyOn(cronService, 'prev');
+      const date = new Date('2022-09-21');
+      const parsedDate = cronParser.parseExpression(cron, {
+        utc: true,
+        currentDate: date,
+      });
+      const parseSpy = jest
+        .spyOn(cronService, 'parse')
+        .mockReturnValueOnce(parsedDate);
 
       // act
-      const nextExecutionDate =
-        cronService.getCurrentExecutionDateFromTimestamp(cron, date);
+      const currentExecution = cronService.getCurrentExecutionDateFromTimestamp(
+        cron,
+        date,
+      );
 
       // assert
       expect(parseSpy).toBeCalledTimes(1);
-      expect(parseSpy).toBeCalledWith(cron, { currentDate: date });
-      expect(prevSpy).toBeCalledTimes(1);
-      expect(nextExecutionDate).toEqual(dayjs('2022-09-23').utc().toDate());
+      expect(parseSpy).toBeCalledWith(cron, { utc: true, currentDate: date });
+      expect(currentExecution).toEqual(new Date('2022-09-16'));
+    });
+  });
+
+  describe('addDaysToCron', () => {
+    it('should add days to a cron expression', () => {
+      // Arrange
+      const expressions = [
+        '0 0 * * 1',
+        '0 0 * * 2',
+        '0 0 * * 3',
+        '0 0 * * 4',
+        '0 0 * * 5',
+        '0 0 * * 6',
+      ];
+
+      const expectations = [
+        '0 0 * * 3',
+        '0 0 * * 4',
+        '0 0 * * 5',
+        '0 0 * * 6',
+        '0 0 * * 1',
+        '0 0 * * 2',
+      ];
+
+      // Act
+      const newExpressions = expressions.map((expression) =>
+        cronService.addDaysToCron(expression, 2),
+      );
+
+      // Assert
+      newExpressions.forEach((newExpressions, index) => {
+        expect(newExpressions).toBe(expectations[index]);
+      });
+    });
+
+    it('should return * if the day in the cron expression is represented by *', () => {
+      // Act
+      const newExpressions = cronService.addDaysToCron('* * * * *', 2);
+
+      // Assert
+      expect(newExpressions).toBe('* * * * *');
     });
   });
 });
