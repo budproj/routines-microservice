@@ -17,8 +17,9 @@ export class SecurityService {
   userHasPermission(
     userPermissions: User['permissions'],
     permissionToCheck: string,
+    throwError = true,
   ): boolean {
-    if (!userPermissions.includes(permissionToCheck)) {
+    if (!userPermissions.includes(permissionToCheck) && throwError) {
       throw new HttpException(
         "User doesn't have permission to execute this action",
         HttpStatus.UNAUTHORIZED,
