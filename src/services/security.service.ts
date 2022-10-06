@@ -39,7 +39,7 @@ export class SecurityService {
     );
 
     const hasAdminRole = adminRoleToCheck
-      ? this.userHasPermission(user.permissions, adminRoleToCheck)
+      ? this.userHasPermission(user.permissions, adminRoleToCheck, false)
       : false;
 
     if (!isUserFromCompany && !hasAdminRole) {
