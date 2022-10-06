@@ -26,7 +26,7 @@ export class SettingsController {
     @User() user: UserType,
     @Body() settings: SettingsWithoutCompany,
   ) {
-    this.security.userHasPermission(user.permissions, 'routines:update:any');
+    this.security.userHasPermission(user.permissions, 'routines:create:any');
 
     const companies = await lastValueFrom<Team[]>(
       this.nats.send('core-ports.get-companies', {}),
@@ -43,8 +43,8 @@ export class SettingsController {
     @Param() companyId: string,
     @Body() settings: SettingsWithoutCompany,
   ): Promise<RoutineSettings> {
-    this.security.userHasPermission(user.permissions, 'routines:update:own');
-    this.security.isUserFromCompany(user, companyId, 'routines:update:any');
+    this.security.userHasPermission(user.permissions, 'routines:create:team');
+    this.security.isUserFromCompany(user, companyId, 'routines:create:any');
 
     const settingsWithCompany = {
       ...settings,
