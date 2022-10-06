@@ -122,4 +122,26 @@ export class SettingsController {
 
     return updatedSettings;
   }
+
+  @Get('/:companyId/notifications/:teamId')
+  async getCompanySettings(
+    @User() user: UserType,
+    @Param('companyId') companyId: string,
+    @Param('teamId') teamId: string,
+  ): Promise<{ teamOptedOut: boolean }> {
+    this.security.isUserFromCompany(user, companyId, 'routines:read:any');
+
+    const companySettings = await this.routineSettings.routineSettings({
+      companyId,
+    });
+
+    const teamOptedOut = this.routineSettings.teamOptedOut(
+      companySettings.disabledTeams,
+      teamId,
+    );
+
+    return {
+      teamOptedOut,
+    };
+  }
 }
