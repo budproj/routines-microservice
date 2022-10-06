@@ -1,6 +1,14 @@
-import { Body, Controller, Inject, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Patch,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { Prisma, RoutineSettings } from '@prisma/client';
+import { RoutineSettings } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
 import { SecurityService } from '../../services/security.service';
@@ -74,5 +82,44 @@ export class SettingsController {
     this.nats.emit('createSchedule', routineReminderNotificationData);
 
     return createdSettings;
+  }
+
+  @Patch('/:companyId')
+  async updateCompanySettings(
+    @User() user: UserType,
+    @Param('companyId') companyId: string,
+    @Body() settings: Partial<SettingsWithoutCompany>,
+  ): Promise<RoutineSettings> {
+    this.security.userHasPermission(user.permissions, 'routines:update:team');
+    this.security.isUserFromCompany(user, companyId, 'routines:update:any');
+
+    const newSettings = {
+      disabledTeams: settings?.disabledTeams,
+    };
+
+    const updatedSettings = await this.routineSettings.updateRoutineSettings({
+      where: { companyId },
+      data: newSettings,
+    });
+
+    const routineNotificationData = {
+      ...updatedSettings,
+      queue: 'routine-notification',
+    };
+    this.nats.emit('updateSchedule', routineNotificationData);
+
+    const daysToRoutineReminder = 3;
+    const routineReminderCron = this.cron.addDaysToCron(
+      updatedSettings.cron,
+      daysToRoutineReminder,
+    );
+    const routineReminderNotificationData = {
+      ...updatedSettings,
+      queue: 'routine-reminder-notification',
+      cron: routineReminderCron,
+    };
+    this.nats.emit('updateSchedule', routineReminderNotificationData);
+
+    return updatedSettings;
   }
 }
