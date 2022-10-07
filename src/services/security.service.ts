@@ -5,8 +5,20 @@ import { Team } from '../types/Team';
 
 @Injectable()
 export class SecurityService {
-  async isUserFromTeam(user: UserType, teamId: Team['id']) {
-    if (user.teams.some((team) => team.id !== teamId)) {
+  async isUserFromTeam(
+    user: UserType,
+    teamId: Team['id'],
+    adminRoleToCheck?: string,
+  ) {
+    const isUserFromTeam = user.companies.some(
+      (company) => company.id === teamId,
+    );
+
+    const hasAdminRole = adminRoleToCheck
+      ? this.userHasPermission(user.permissions, adminRoleToCheck, false)
+      : false;
+
+    if (!isUserFromTeam && !hasAdminRole) {
       throw new HttpException(
         "User isn't a member of the team ",
         HttpStatus.UNAUTHORIZED,
