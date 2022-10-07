@@ -84,14 +84,14 @@ export class SettingsController {
     return createdSettings;
   }
 
-  @Patch('/:companyId')
+  @Patch()
   async updateCompanySettings(
     @User() user: UserType,
-    @Param('companyId') companyId: string,
     @Body() settings: Partial<SettingsWithoutCompany>,
   ): Promise<RoutineSettings> {
     this.security.userHasPermission(user.permissions, 'routines:update:team');
-    this.security.isUserFromCompany(user, companyId, 'routines:update:any');
+    const userCompany = user.companies[0];
+    const companyId = userCompany.id;
 
     const newSettings = {
       disabledTeams: settings?.disabledTeams,
