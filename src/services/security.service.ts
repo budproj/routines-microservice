@@ -8,14 +8,14 @@ export class SecurityService {
   async isUserFromTeam(
     user: UserType,
     teamId: Team['id'],
-    adminRoleToCheck?: string,
+    rolesToCheck?: string,
   ) {
     const isUserFromTeam = user.companies.some(
       (company) => company.id === teamId,
     );
 
-    const hasAdminRole = adminRoleToCheck
-      ? this.userHasPermission(user.permissions, adminRoleToCheck, false)
+    const hasAdminRole = rolesToCheck
+      ? this.userHasPermission(user.permissions, rolesToCheck, false)
       : false;
 
     if (!isUserFromTeam && !hasAdminRole) {
@@ -44,14 +44,14 @@ export class SecurityService {
   isUserFromCompany(
     user: UserType,
     companyId: Team['id'],
-    adminRoleToCheck?: string,
+    rolesToCheck?: string,
   ) {
     const isUserFromCompany = user.companies.some(
       (company) => company.id === companyId,
     );
 
-    const hasAdminRole = adminRoleToCheck
-      ? this.userHasPermission(user.permissions, adminRoleToCheck, false)
+    const hasAdminRole = rolesToCheck
+      ? this.userHasPermission(user.permissions, rolesToCheck, false)
       : false;
 
     if (!isUserFromCompany && !hasAdminRole) {
