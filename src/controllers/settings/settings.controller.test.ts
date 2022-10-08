@@ -18,6 +18,7 @@ describe('Settings Controller', () => {
 
   const routineSettingsServiceMock = {
     createRoutineSettings: jest.fn(),
+    updateRoutineSettings: jest.fn(),
   };
 
   // const securityServiceMock = {
@@ -54,7 +55,7 @@ describe('Settings Controller', () => {
 
   const userMock: User = {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
-    companies: [],
+    companies: [{ id: '1234' }],
     teams: [],
     permissions: [
       'routines:update:team',
@@ -172,6 +173,90 @@ describe('Settings Controller', () => {
         otherCompany.id,
         settings,
       );
+    });
+  });
+
+  describe('updateCompanySettings', () => {
+    it('should validate if the user has permissions to update teams', async () => {
+      const userWithoutPermission = {
+        ...userMock,
+        permissions: [],
+      };
+
+      expect(() =>
+        controller.updateCompanySettings(userWithoutPermission, settings),
+      ).rejects.toBeInstanceOf(Error);
+    });
+
+    it('should update the users company routines settings with the new settings', async () => {
+      // arrange
+      routineSettingsServiceMock.updateRoutineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      await controller.updateCompanySettings(userMock, settings);
+
+      // assert
+      expect(routineSettingsServiceMock.updateRoutineSettings).toBeCalledTimes(
+        1,
+      );
+      expect(routineSettingsServiceMock.updateRoutineSettings).toBeCalledWith({
+        where: { companyId: userMock.companies[0].id },
+        data: {
+          disabledTeams: settings.disabledTeams,
+        },
+      });
+    });
+
+    it('should emit a message to update the routine schedule with the new data', async () => {
+      // arrange
+      routineSettingsServiceMock.updateRoutineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      await controller.updateCompanySettings(userMock, settings);
+
+      // assert
+      expect(emitMock).toBeCalledTimes(2);
+      expect(emitMock).toBeCalledWith('updateSchedule', {
+        ...settings,
+        queue: 'routine-notification',
+      });
+    });
+
+    it('should emit a message to update the reminder schedule with the new data', async () => {
+      // arrange
+      routineSettingsServiceMock.updateRoutineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      await controller.updateCompanySettings(userMock, settings);
+
+      // assert
+      expect(emitMock).toBeCalledTimes(2);
+      expect(emitMock).toBeCalledWith('updateSchedule', {
+        ...settings,
+        queue: 'routine-reminder-notification',
+        cron: '0 0 * * 2',
+      });
+    });
+
+    it('should return the new settings info', async () => {
+      // arrange
+      routineSettingsServiceMock.updateRoutineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      const newSettings = await controller.updateCompanySettings(
+        userMock,
+        settings,
+      );
+
+      expect(newSettings).toEqual(settings);
     });
   });
 });
