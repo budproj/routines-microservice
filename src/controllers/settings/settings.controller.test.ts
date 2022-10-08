@@ -19,6 +19,7 @@ describe('Settings Controller', () => {
   const routineSettingsServiceMock = {
     createRoutineSettings: jest.fn(),
     updateRoutineSettings: jest.fn(),
+    routineSettings: jest.fn(),
   };
 
   // const securityServiceMock = {
@@ -257,6 +258,37 @@ describe('Settings Controller', () => {
       );
 
       expect(newSettings).toEqual(settings);
+    });
+  });
+
+  describe('getCompanySettings', () => {
+    it('should get the users company routine settings', async () => {
+      // arrange
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      await controller.getCompanySettings(userMock);
+
+      // assert
+      expect(routineSettingsServiceMock.routineSettings).toBeCalledTimes(1);
+      expect(routineSettingsServiceMock.routineSettings).toBeCalledWith({
+        companyId: userMock.companies[0].id,
+      });
+    });
+
+    it('should return the users company routine settings', async () => {
+      // arrange
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        settings,
+      );
+
+      // act
+      const companySettings = await controller.getCompanySettings(userMock);
+
+      // assert
+      expect(companySettings).toEqual(settings);
     });
   });
 });
