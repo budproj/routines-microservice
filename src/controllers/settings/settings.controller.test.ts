@@ -56,7 +56,12 @@ describe('Settings Controller', () => {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
     companies: [],
     teams: [],
-    permissions: ['routines:update:own', 'routines:update:any'],
+    permissions: [
+      'routines:update:team',
+      'routines:update:any',
+      'routines:create:team',
+      'routines:create:any',
+    ],
   };
 
   describe('createSettings', () => {
@@ -124,7 +129,7 @@ describe('Settings Controller', () => {
   });
 
   describe('globalRoutineSettingsCreation', () => {
-    it("should throw an error if the user doesn't the team:update:any role", async () => {
+    it("should throw an error if the user doesn't the routines:create:any role", async () => {
       // arrange
       const userWithoutPermission = {
         ...userMock,
