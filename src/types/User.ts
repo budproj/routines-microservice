@@ -8,4 +8,5 @@ export interface User {
   companies: Team[];
   picture: string;
   permissions: string[];
+  authzSub?: string;
 }
