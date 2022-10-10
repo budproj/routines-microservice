@@ -7,4 +7,5 @@ export interface User {
   teams: Team[];
   companies: Team[];
   picture: string;
+  authzSub?: string;
 }
