@@ -46,7 +46,7 @@ export class NatsController {
     const companyUsers = await // mudar para get users from team depois do merge
     this.nats.sendMessage<any, User[]>('core-ports.get-users-from-team', {
       teamID: routineData.companyId,
-      filters: { resolveTree: true },
+      filters: { resolveTree: true, withTeams: true },
     });
 
     const filteredUsers = companyUsers
