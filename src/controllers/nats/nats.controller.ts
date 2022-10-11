@@ -1,15 +1,8 @@
-import { Controller, Inject, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 
-import {
-  ClientProxy,
-  MessagePattern,
-  Payload,
-  Transport,
-} from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { User } from 'src/types/User';
-import { Team } from 'src/types/Team';
 import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
@@ -43,36 +36,34 @@ export class NatsController {
       disabledTeams: string[];
     },
   ) {
-    const companyUsers = await // mudar para get users from team depois do merge
-    this.nats.sendMessage<any, User[]>('core-ports.get-users-from-team', {
-      teamID: routineData.companyId,
-      filters: { resolveTree: true, withTeams: true },
-    });
+    const companyUsers = await this.nats.sendMessage<any, User[]>(
+      'core-ports.get-users-from-team',
+      {
+        teamID: routineData.companyId,
+        filters: { resolveTree: true, withTeams: true },
+      },
+    );
 
     const filteredUsers = companyUsers
       .filter((user) => {
-        const userTeamIds = user.teams.map((team) => team.id);
-
-        const allTeamsOptedOut = this.routineSettings.allTeamsOptedOut(
-          routineData.disabledTeams,
-          userTeamIds,
-        );
-        return !allTeamsOptedOut;
+        const teste =
+          this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
+            user,
+            routineData.disabledTeams,
+          );
+        return teste;
       })
       .map((user) => {
-        const userTeamsWithRoutineEnabled = user.teams.filter(
-          (team) => !routineData.disabledTeams.includes(team.id),
+        const test = this.routineSettings.removeDisabledTeamsFromUser(
+          user,
+          routineData.disabledTeams,
         );
-        return { ...user, teams: userTeamsWithRoutineEnabled };
+        return test;
       });
 
-    const routineSettings = await this.routineSettings.routineSettings({
-      id: routineData.id,
-    });
-
-    const cron = this.cronService.parse(routineSettings.cron);
-
-    const dateToCalculate = cron.prev().toDate();
+    const dateToCalculate = await this.routineSettings.getCurrentRoutineDate(
+      routineData.id,
+    );
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -115,5 +106,74 @@ export class NatsController {
     messages.forEach((message) =>
       this.nats.sendMessage('notification', message),
     );
+  }
+
+  @MessagePattern('routine-reminder-notification', Transport.NATS)
+  async routineReminder(
+    @Payload()
+    routineData: {
+      id: string;
+      companyId: string;
+      disabledTeams: string[];
+    },
+  ) {
+    const companyUsers = await this.nats.sendMessage<any, User[]>(
+      'core-ports.get-users-from-team',
+      {
+        teamID: routineData.companyId,
+        filters: { resolveTree: true, withTeams: true },
+      },
+    );
+
+    const filteredUsers = companyUsers
+      .filter((user) =>
+        this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
+          user,
+          routineData.disabledTeams,
+        ),
+      )
+      .map((user) =>
+        this.routineSettings.removeDisabledTeamsFromUser(
+          user,
+          routineData.disabledTeams,
+        ),
+      );
+
+    const dateToCalculate = await this.routineSettings.getCurrentRoutineDate(
+      routineData.id,
+    );
+
+    const answerGroups = await this.answerGroupService.answerGroups({
+      where: {
+        timestamp: { gte: dateToCalculate },
+        companyId: routineData.companyId,
+      },
+    });
+
+    if (answerGroups.length > 0) {
+      const timestamp = new Date().toISOString();
+
+      const messages = filteredUsers
+        .map((user) =>
+          user.teams.map((team) => ({
+            messageId: randomUUID(),
+            type: 'routine',
+            timestamp: timestamp,
+            recipientId: user.authzSub,
+            properties: {
+              sender: {},
+              team: {
+                name: team.name,
+                id: team.id,
+              },
+            },
+          })),
+        )
+        .flat();
+
+      messages.forEach((message) =>
+        this.nats.sendMessage('notification', message),
+      );
+    }
   }
 }

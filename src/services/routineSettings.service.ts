@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { RoutineSettings, Prisma } from '@prisma/client';
+import { Team } from '../../src/types/Team';
+import { User } from '../../src/types/User';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
+import { CronService } from './cron.service';
 
 @Injectable()
 export class RoutineSettingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cronService: CronService,
+  ) {}
 
   async routineSettings(
     routineWhereUniqueInput: Prisma.RoutineSettingsWhereUniqueInput,
@@ -84,5 +90,35 @@ export class RoutineSettingsService {
 
   teamOptedOut(disabledTeamsIds: string[], teamId: string): boolean {
     return disabledTeamsIds.includes(teamId);
+  }
+
+  async getCurrentRoutineDate(id: string) {
+    const routineSettings = await this.routineSettings({
+      id: id,
+    });
+
+    const cron = this.cronService.parse(routineSettings.cron);
+
+    return cron.prev().toDate();
+  }
+
+  userHasAtLeastOneTeamWithActiveRoutine(
+    user: User,
+    disabledTeamsIds: Team['id'][],
+  ) {
+    const userTeamIds = user.teams.map((team) => team.id);
+
+    const allTeamsOptedOut = this.allTeamsOptedOut(
+      disabledTeamsIds,
+      userTeamIds,
+    );
+    return !allTeamsOptedOut;
+  }
+
+  removeDisabledTeamsFromUser(user: User, disabledTeamsIds: Team['id'][]) {
+    const userTeamsWithRoutineEnabled = user.teams.filter(
+      (team) => !disabledTeamsIds.includes(team.id),
+    );
+    return { ...user, teams: userTeamsWithRoutineEnabled };
   }
 }
