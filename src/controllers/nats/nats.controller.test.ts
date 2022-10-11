@@ -17,8 +17,10 @@ describe('NATS Controller', () => {
   beforeEach(jest.resetAllMocks);
   const healthCheckDBServiceMock = { patch: dbHealthCheckPath };
   const routineSettingsServiceMock = {
-    allTeamsOptedOut: jest.fn(),
     routineSettings: jest.fn(),
+    userHasAtLeastOneTeamWithActiveRoutine: jest.fn(),
+    removeDisabledTeamsFromUser: jest.fn(),
+    getCurrentRoutineDate: jest.fn(),
   };
   const answerGroupServiceMock = { answerGroups: jest.fn() };
   const messagingServiceMock = {
@@ -133,16 +135,17 @@ describe('NATS Controller', () => {
         companyId: '0788abd6-4996-4224-8f24-094b2d3c0d3a',
         disabledTeams: ['1', '4'],
       };
-      messagingServiceMock.sendMessage
-        .mockResolvedValueOnce(usersMock)
-        .mockResolvedValueOnce([{ id: '1' }])
-        .mockResolvedValueOnce([{ id: '2' }])
-        .mockResolvedValueOnce([{ id: '3' }]);
-      routineSettingsServiceMock.allTeamsOptedOut.mockReturnValue(false);
-      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
-        routineSettingsMock,
+      messagingServiceMock.sendMessage.mockResolvedValueOnce(usersMock);
+      routineSettingsServiceMock.userHasAtLeastOneTeamWithActiveRoutine.mockReturnValue(
+        true,
       );
-
+      routineSettingsServiceMock.removeDisabledTeamsFromUser
+        .mockReturnValueOnce(usersMock[0])
+        .mockReturnValueOnce(usersMock[1])
+        .mockReturnValueOnce(usersMock[2]);
+      routineSettingsServiceMock.getCurrentRoutineDate.mockReturnValue(
+        new Date('2022-10-07T00:00:00.000Z'),
+      );
       answerGroupServiceMock.answerGroups.mockResolvedValue([answerGroupMock]);
 
       // Act
@@ -176,14 +179,20 @@ describe('NATS Controller', () => {
         companyId: '0788abd6-4996-4224-8f24-094b2d3c0d3a',
         disabledTeams: [],
       };
-      messagingServiceMock.sendMessage
-        .mockResolvedValueOnce(usersMock)
-        .mockResolvedValueOnce([{ id: '1' }])
-        .mockResolvedValueOnce([{ id: '2' }])
-        .mockResolvedValueOnce([{ id: '3' }]);
-      routineSettingsServiceMock.allTeamsOptedOut.mockReturnValue(false);
+      messagingServiceMock.sendMessage.mockResolvedValueOnce(usersMock);
+
+      routineSettingsServiceMock.userHasAtLeastOneTeamWithActiveRoutine.mockReturnValue(
+        true,
+      );
+      routineSettingsServiceMock.removeDisabledTeamsFromUser
+        .mockReturnValueOnce(usersMock[0])
+        .mockReturnValueOnce(usersMock[1])
+        .mockReturnValueOnce(usersMock[2]);
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
+      );
+      routineSettingsServiceMock.getCurrentRoutineDate.mockReturnValue(
+        new Date('2022-10-07T00:00:00.000Z'),
       );
       answerGroupServiceMock.answerGroups.mockResolvedValue([answerGroupMock]);
 
