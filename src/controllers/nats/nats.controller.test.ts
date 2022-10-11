@@ -150,7 +150,7 @@ describe('NATS Controller', () => {
 
       // Assert
       expect(
-        messagingServiceMock.sendMessage.mock.calls[4][1]
+        messagingServiceMock.sendMessage.mock.calls[1][1]
           .usersWithPendingRoutines,
       ).toEqual([
         {

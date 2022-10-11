@@ -44,23 +44,12 @@ export class NatsController {
     },
   ) {
     const companyUsers = await // mudar para get users from team depois do merge
-    this.nats.sendMessage<string, User[]>(
-      'core-ports.get-team-members',
-      routineData.companyId,
-    );
+    this.nats.sendMessage<any, User[]>('core-ports.get-users-from-team', {
+      teamID: routineData.companyId,
+      filters: { resolveTree: true },
+    });
 
-    const companyUsersWithTeams = await Promise.all(
-      companyUsers.map(async (user) => {
-        const teams = await this.nats.sendMessage<User, Team[]>(
-          'core-ports.get-user-team-tree',
-          user,
-        );
-
-        return { ...user, teams };
-      }),
-    );
-
-    const filteredUsers = companyUsersWithTeams
+    const filteredUsers = companyUsers
       .filter((user) => {
         const userTeamIds = user.teams.map((team) => team.id);
 
