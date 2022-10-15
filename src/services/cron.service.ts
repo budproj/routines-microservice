@@ -27,8 +27,11 @@ export class CronService {
     return `0 0 * * ${startDay}`;
   }
 
-  parse(cron: string): cronParser.CronExpression {
-    return cronParser.parseExpression(cron, { utc: true });
+  parse(
+    cron: string,
+    options?: cronParser.ParserOptions<false>,
+  ): cronParser.CronExpression {
+    return cronParser.parseExpression(cron, { ...options, utc: true });
   }
 
   parseFromCadence(cadence: Cadence, startDate: Date) {
@@ -76,5 +79,10 @@ export class CronService {
       .join(' ');
 
     return cronData;
+  }
+
+  getStartDayOfRoutine(timestamp: Date, cron: string) {
+    const parsedCron = this.parse(cron, { currentDate: timestamp });
+    return parsedCron.prev();
   }
 }
