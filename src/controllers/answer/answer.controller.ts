@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
@@ -69,9 +69,9 @@ export class AnswerController {
     return teams;
   }
 
-  @Get()
+  @Get('/:answerId')
   async getDetailedUserAnswer(
-    @Query('answerId') id: string,
+    @Param('answerId') id: string,
     @User() user: UserType,
   ) {
     const answerGroup = await this.answerGroupService.answerGroup({
