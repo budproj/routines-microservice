@@ -81,4 +81,8 @@ export class RoutineSettingsService {
         )
       : false;
   }
+
+  teamOptedOut(disabledTeamsIds: string[], teamId: string): boolean {
+    return disabledTeamsIds.includes(teamId);
+  }
 }

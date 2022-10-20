@@ -189,4 +189,45 @@ describe('Cron Service', () => {
       expect(nextExecutionDate).toEqual(dayjs('2022-09-23').utc().toDate());
     });
   });
+
+  describe('addDaysToCron', () => {
+    it('should add days to a cron expression', () => {
+      // Arrange
+      const expressions = [
+        '0 0 * * 1',
+        '0 0 * * 2',
+        '0 0 * * 3',
+        '0 0 * * 4',
+        '0 0 * * 5',
+        '0 0 * * 6',
+      ];
+
+      const expectations = [
+        '0 0 * * 3',
+        '0 0 * * 4',
+        '0 0 * * 5',
+        '0 0 * * 6',
+        '0 0 * * 1',
+        '0 0 * * 2',
+      ];
+
+      // Act
+      const newExpressions = expressions.map((expression) =>
+        cronService.addDaysToCron(expression, 2),
+      );
+
+      // Assert
+      newExpressions.forEach((newExpressions, index) => {
+        expect(newExpressions).toBe(expectations[index]);
+      });
+    });
+
+    it('should return * if the day in the cron expression is represented by *', () => {
+      // Act
+      const newExpressions = cronService.addDaysToCron('* * * * *', 2);
+
+      // Assert
+      expect(newExpressions).toBe('* * * * *');
+    });
+  });
 });

@@ -9,7 +9,7 @@ export interface ValueRangeProperties {
 export interface ConditionalTypeInfo {
   dependsOn: string;
   type: string;
-  roadblock?: boolean;
+  road_block?: boolean;
   value_range?: number;
 }
 
