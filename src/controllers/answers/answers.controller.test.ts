@@ -7,6 +7,7 @@ import { AnswersController as AnswersControllerClass } from './answers.controlle
 import { FormService } from '../../services/form.service';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
+import { RoutineSettingsService } from '../../services/routineSettings.service';
 
 beforeEach(jest.resetAllMocks);
 
@@ -27,6 +28,10 @@ describe('Answers Controller', () => {
     isUserFromCompany: jest.fn(),
   };
 
+  const routineSettingsServiceMock = {
+    routineSettings: jest.fn(),
+  };
+
   const routineSettingsMock = {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
     companyId: '968e8d90-c1dd-4d5c-948a-067e070ea269',
@@ -44,6 +49,7 @@ describe('Answers Controller', () => {
     picture: '',
     firstName: 'Morty',
     lastName: 'Smith',
+    permissions: [],
   };
 
   let AnswersController: AnswersControllerClass;
@@ -55,6 +61,7 @@ describe('Answers Controller', () => {
       FormService,
       MessagingService,
       SecurityService,
+      RoutineSettingsService,
     ],
   })
     .overrideProvider(AnswerGroupService)
@@ -63,6 +70,8 @@ describe('Answers Controller', () => {
     .useValue(formServiceMock)
     .overrideProvider(MessagingService)
     .useValue(messagingServiceMock)
+    .overrideProvider(RoutineSettingsService)
+    .useValue(routineSettingsServiceMock)
     .overrideProvider(SecurityService)
     .useValue(securityServiceMock);
 
@@ -227,12 +236,16 @@ describe('Answers Controller', () => {
       ]);
     });
   });
+
   describe('findOverviewFromTeam', () => {
     it('should return an object of overview containing the feeling and productivity with an empty array', async () => {
       // arrange
       messagingServiceMock.sendMessage
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce([userMock]);
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        routineSettingsMock,
+      );
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -247,6 +260,7 @@ describe('Answers Controller', () => {
       // assert
       expect(teamOverview).toEqual([]);
     });
+
     it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
       // arrange
       messagingServiceMock.sendMessage
@@ -256,6 +270,10 @@ describe('Answers Controller', () => {
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
       ]);
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        routineSettingsMock,
+      );
+
       const answerGroupsMocks = [
         {
           id: '1',
@@ -298,6 +316,7 @@ describe('Answers Controller', () => {
         userMock,
         userMock.teams[0].id,
       );
+
       // assert
       expect(teamOverview).toEqual({
         overview: {
@@ -322,6 +341,9 @@ describe('Answers Controller', () => {
       messagingServiceMock.sendMessage
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce([userMock]);
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        routineSettingsMock,
+      );
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -375,6 +397,71 @@ describe('Answers Controller', () => {
           resolveTree: true,
         },
       );
+    });
+
+    it('should map the answer groups overriding the answer timestamp to the date of the beggining of that routine', async () => {
+      // arrange
+      messagingServiceMock.sendMessage
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce([userMock]);
+      formServiceMock.getRoutineForm.mockReturnValueOnce([
+        { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+      ]);
+      routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
+        routineSettingsMock,
+      );
+
+      const answerGroupsMocks = [
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+        {
+          id: '1',
+          answers: [
+            { value: 1, questionId: '1' },
+            { value: 3, questionId: '2' },
+          ],
+          timestamp: '2022-09-15T11:09:31.143Z',
+          userId: userMock.id,
+        },
+      ];
+      answerGroupServiceMock.answerGroups.mockResolvedValueOnce(
+        answerGroupsMocks,
+      );
+
+      answerGroupsMocks.forEach((mock) =>
+        answerGroupServiceMock.parseAnswerTimestamp.mockReturnValueOnce(mock),
+      );
+
+      // act
+      await AnswersController.findOverviewFromTeam(
+        userMock,
+        userMock.teams[0].id,
+      );
+
+      // assert
+      answerGroupsMocks.forEach((mock) => {
+        expect(answerGroupServiceMock.parseAnswerTimestamp).toBeCalledWith(
+          mock,
+          routineSettingsMock.cron,
+        );
+      });
     });
   });
 });

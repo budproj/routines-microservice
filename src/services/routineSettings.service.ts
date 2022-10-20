@@ -117,4 +117,8 @@ export class RoutineSettingsService {
     );
     return { ...user, teams: userTeamsWithRoutineEnabled };
   }
+
+  teamOptedOut(disabledTeamsIds: string[], teamId: string): boolean {
+    return disabledTeamsIds.includes(teamId);
+  }
 }

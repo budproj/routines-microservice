@@ -1,15 +1,18 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
+import { groupBy, meanBy, orderBy } from 'lodash';
+
 import { User } from '../../decorators/user.decorator';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { FormService } from '../../services/form.service';
-import { User as UserType } from '../../types/User';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
-import { groupBy, meanBy, orderBy } from 'lodash';
-import { AnswerGroupWithAnswers } from 'src/types/AnswerGroupWithAnswers';
-import { Team } from 'src/types/Team';
+
+import { AnswerGroupWithAnswers } from '../../types/AnswerGroupWithAnswers';
+import { Team } from '../../types/Team';
+import { User as UserType } from '../../types/User';
+import { RoutineSettingsService } from '../../services/routineSettings.service';
 
 interface FindAnswersQuery {
   before?: string;
@@ -37,6 +40,7 @@ export class AnswersController {
     private answerGroupService: AnswerGroupService,
     private formService: FormService,
     private securityService: SecurityService,
+    private routineSettingsService: RoutineSettingsService,
   ) {}
 
   @Get('/summary/:teamId?')
@@ -126,6 +130,9 @@ export class AnswersController {
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
     const rangeQuestions = form.filter(
@@ -159,12 +166,15 @@ export class AnswersController {
     }
 
     const answerGroupsWithTimestamp = answerGroups.map((answerGroup) => {
-      return this.answerGroupService.parseAnswerTimestamp(answerGroup);
+      return this.answerGroupService.parseAnswerTimestamp(
+        answerGroup,
+        routine.cron,
+      );
     });
 
-    const groupedAnswerGroupsByTimestamp = Object.values(
-      groupBy(answerGroupsWithTimestamp, 'timestamp'),
-    );
+    const groupedAnswerGroupsByTimestamp = Object.values<
+      AnswerGroupWithAnswers[]
+    >(groupBy(answerGroupsWithTimestamp, 'timestamp'));
 
     const answerGroupsByQuestions = rangeQuestionsId.map((questionId) => {
       return groupedAnswerGroupsByTimestamp.map((groupedAnswerWeek) => {
