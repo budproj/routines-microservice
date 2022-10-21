@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import * as dayjs from 'dayjs';
 
 import { User } from '../../decorators/user.decorator';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -202,13 +203,9 @@ export class AnswerController {
           ];
 
           const roadBlockHistory = historyTimespans.map((timespan) => {
-            const answeredRoadblock = values.find(({ timestamp }) =>
-              this.cronService.isSameExecutionTimeSpan(
-                timespan.startDate,
-                timestamp,
-                settings.cron,
-              ),
-            );
+            const answeredRoadblock = values.find(({ timestamp }) => {
+              return dayjs(timespan.startDate).isSame(timestamp);
+            });
 
             return {
               id: null,
