@@ -12,6 +12,7 @@ import { RoutineFormLangs } from '../../services/constants/form';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { CronService } from '../../services/cron.service';
 import { AnswersService } from '../../services/answers.service';
+import { MessagingService } from '../../services/messaging.service';
 
 @Controller('/answer')
 export class AnswerController {
@@ -21,6 +22,7 @@ export class AnswerController {
     private routineFormService: FormService,
     private routineSettingsService: RoutineSettingsService,
     private cronService: CronService,
+    private messaging: MessagingService,
   ) {}
 
   @Post()
@@ -93,7 +95,6 @@ export class AnswerController {
     });
 
     const cronExpression = this.cronService.parse(settings.cron, {
-      utc: true,
       currentDate: answerGroup.timestamp,
     });
 
@@ -221,8 +222,13 @@ export class AnswerController {
     });
 
     const validAnswers = userAnswers.filter((answer) => answer);
+    const userThatAnswered = await this.messaging.sendMessage(
+      'core-ports.get-user',
+      answerGroup.userId,
+    );
 
     const answerDetails = {
+      user: userThatAnswered,
       history: history,
       answers: validAnswers,
     };

@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { FormService } from '../../services/form.service';
+import { MessagingService } from '../../services/messaging.service';
 
 beforeEach(jest.resetAllMocks);
 
@@ -35,6 +36,10 @@ describe('Answer Controller', () => {
     getMultipleTimespan: jest.fn(),
     getCurrentExecutionDateFromTimestamp: jest.fn(),
     isSameExecutionTimeSpan: jest.fn(),
+  };
+
+  const messagingServiceMock = {
+    sendMessage: jest.fn(),
   };
 
   const routineSettingsMock = {
@@ -112,6 +117,7 @@ describe('Answer Controller', () => {
       CronService,
       FormService,
       RoutineSettingsService,
+      MessagingService,
     ],
   })
     .overrideProvider(AnswerGroupService)
@@ -120,6 +126,8 @@ describe('Answer Controller', () => {
     .useValue(answerServiceMock)
     .overrideProvider(RoutineSettingsService)
     .useValue(routineSettingsServiceMock)
+    .overrideProvider(MessagingService)
+    .useValue(messagingServiceMock)
     .overrideProvider(CronService)
     .useValue(cronServiceMock);
 
@@ -325,11 +333,15 @@ describe('Answer Controller', () => {
       ];
 
       answerServiceMock.answers.mockReturnValue(answer);
+      messagingServiceMock.sendMessage.mockReturnValue(userMock);
+
+      // Act
       const userAnswerDetailed = await AnswerController.getDetailedUserAnswer(
         fakeAnswerGroupId,
         userMock,
       );
 
+      // Arrange
       const history = [
         {
           id: answerGroupsMock[0].id,
@@ -357,7 +369,9 @@ describe('Answer Controller', () => {
           finishDate: new Date('2022-09-29'),
         },
       ].reverse();
+
       const expectedAnswersDetailed = {
+        user: userMock,
         history,
         answers: [
           {
