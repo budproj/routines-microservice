@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';

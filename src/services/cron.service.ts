@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as cronParser from 'cron-parser';
-import { CronExpression, ParserOptions } from 'cron-parser';
+import { CronExpression } from 'cron-parser';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
