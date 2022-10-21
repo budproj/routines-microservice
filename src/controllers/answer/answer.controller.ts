@@ -112,7 +112,7 @@ export class AnswerController {
       take: 4,
       orderBy: { timestamp: 'desc' },
       where: {
-        userId: user.id,
+        userId: answerGroup.userId,
         id: { not: answerGroup.id },
         timestamp: { lte: secondCronExpressionExecution.toDate() },
       },
