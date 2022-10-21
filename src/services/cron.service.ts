@@ -138,7 +138,7 @@ export class CronService {
   }
 
   getStartDayOfRoutine(timestamp: Date, cron: string) {
-    const parsedCron = this.parse(cron, { currentDate: timestamp });
+    const parsedCron = this.parse(cron, { utc: true, currentDate: timestamp });
     return parsedCron.prev();
   }
 }

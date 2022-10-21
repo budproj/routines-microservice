@@ -139,7 +139,9 @@ export class AnswerController {
 
     const previousAnswers = await this.answersService.answers({
       where: {
-        answerGroupId: { in: previousAnswerGroups.map(({ id }) => id) },
+        answerGroupId: {
+          in: previousAnswerGroups.map(({ id }) => id),
+        },
       },
     });
 
@@ -180,6 +182,12 @@ export class AnswerController {
                 ({ id }) => id === answerGroupId,
               ).timestamp,
             }))
+            .map((answer) => ({
+              ...answer,
+              timestamp: this.cronService
+                .getStartDayOfRoutine(answer.timestamp, settings.cron)
+                .toDate(),
+            }))
             .sort((x, y) => x.timestamp.getTime() - y.timestamp.getTime());
 
           const values = [
@@ -187,11 +195,13 @@ export class AnswerController {
             {
               id: currentAnswerFromThisQuestion.id,
               value: currentAnswerFromThisQuestion?.value,
-              timestamp: answerGroup.timestamp,
+              timestamp: this.cronService
+                .getStartDayOfRoutine(answerGroup.timestamp, settings.cron)
+                .toDate(),
             },
           ];
 
-          const history = historyTimespans.map((timespan) => {
+          const roadBlockHistory = historyTimespans.map((timespan) => {
             const answeredRoadblock = values.find(({ timestamp }) =>
               this.cronService.isSameExecutionTimeSpan(
                 timespan.startDate,
@@ -200,18 +210,18 @@ export class AnswerController {
               ),
             );
 
-            return (
-              answeredRoadblock ?? {
-                id: null,
-                value: null,
-                timestamp: timespan.startDate,
-              }
-            );
+            return {
+              id: null,
+              value: null,
+              timestamp: timespan.startDate,
+              ...(answeredRoadblock ?? {}),
+            };
           });
 
           return {
             ...formatedQuestion,
-            values: formQuestion.type === 'road_block' ? history : values,
+            values:
+              formQuestion.type === 'road_block' ? roadBlockHistory : values,
           };
         }
         return {
@@ -222,10 +232,10 @@ export class AnswerController {
     });
 
     const validAnswers = userAnswers.filter((answer) => answer);
-    const userThatAnswered = await this.messaging.sendMessage(
-      'core-ports.get-user',
-      answerGroup.userId,
-    );
+    const userThatAnswered = await this.messaging.sendMessage<
+      UserType['id'],
+      UserType
+    >('core-ports.get-user', answerGroup.userId);
 
     const answerDetails = {
       user: userThatAnswered,
