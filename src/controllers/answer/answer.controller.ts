@@ -174,20 +174,24 @@ export class AnswerController {
           formQuestion.type === 'value_range' ||
           formQuestion.type === 'road_block'
         ) {
+          // console.log({ previousAnswerGroups, previousAnswers });
           const previousAnswersFromThisQuestion = previousAnswers
             .filter((answer) => answer.questionId === formQuestion.id)
-            .map(({ id, value, answerGroupId }) => ({
-              id,
-              value: value,
-              timestamp: previousAnswerGroups.find(
-                ({ id }) => id === answerGroupId,
-              ).timestamp,
-            }))
+            .map(({ id, value, answerGroupId }) => {
+              return {
+                id,
+                value: value,
+                timestamp: previousAnswerGroups.find(
+                  ({ id }) => id === answerGroupId,
+                ).timestamp,
+              };
+            })
             .map((answer) => ({
               ...answer,
-              timestamp: this.cronService
-                .getStartDayOfRoutine(answer.timestamp, settings.cron)
-                .toDate(),
+              timestamp: this.cronService.getStartDayOfRoutine(
+                answer.timestamp,
+                settings.cron,
+              ),
             }))
             .sort((x, y) => x.timestamp.getTime() - y.timestamp.getTime());
 
@@ -196,9 +200,10 @@ export class AnswerController {
             {
               id: currentAnswerFromThisQuestion.id,
               value: currentAnswerFromThisQuestion?.value,
-              timestamp: this.cronService
-                .getStartDayOfRoutine(answerGroup.timestamp, settings.cron)
-                .toDate(),
+              timestamp: this.cronService.getStartDayOfRoutine(
+                answerGroup.timestamp,
+                settings.cron,
+              ),
             },
           ];
 

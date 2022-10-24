@@ -117,7 +117,9 @@ describe('Cron Service', () => {
   describe('getTimespan', () => {
     it('should return the timespam for a given cron expression', () => {
       // arrange
-      const expression = cronParser.parseExpression('0 0 * * 5');
+      const expression = cronParser.parseExpression('0 0 * * 5', {
+        currentDate: new Date('2022-10-03'),
+      });
 
       // act
       const timespan = cronService.getTimespan(expression);

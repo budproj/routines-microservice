@@ -36,6 +36,7 @@ describe('Answer Controller', () => {
     getMultipleTimespan: jest.fn(),
     getCurrentExecutionDateFromTimestamp: jest.fn(),
     isSameExecutionTimeSpan: jest.fn(),
+    getStartDayOfRoutine: jest.fn(),
   };
 
   const messagingServiceMock = {
@@ -54,6 +55,9 @@ describe('Answer Controller', () => {
 
   const mockInterval = cronParser.parseExpression(routineSettingsMock.cron);
 
+  const cronGetCurrentExecutionDateFromTimestampMock = new Date('2022-09-16');
+  const cronGetNextExecutionDateFromTimestampMock = new Date('2022-09-23');
+
   const cronMultipleTimespanMock = [
     {
       startDate: new Date('2022-08-26'),
@@ -68,16 +72,14 @@ describe('Answer Controller', () => {
       finishDate: new Date('2022-09-15'),
     },
     {
-      startDate: new Date('2022-09-16'),
+      startDate: cronGetCurrentExecutionDateFromTimestampMock,
       finishDate: new Date('2022-09-22'),
     },
     {
-      startDate: new Date('2022-09-23'),
+      startDate: cronGetNextExecutionDateFromTimestampMock,
       finishDate: new Date('2022-09-29'),
     },
   ];
-
-  const cronGetCurrentExecutionDateFromTimestampMock = new Date('2022-09-16');
 
   const userMock: User = {
     id: '922ef72a-6c3c-4075-926a-3245cdeea75f',
@@ -94,16 +96,15 @@ describe('Answer Controller', () => {
       id: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
       companyId: routineSettingsMock.companyId,
       userId: userMock.id,
-      timestamp: new Date('2022-09-16'),
+      timestamp: cronGetCurrentExecutionDateFromTimestampMock,
     },
   ];
 
-  const fakeAnswerGroupId = '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc';
   const answerGroupMock = {
-    id: fakeAnswerGroupId,
+    id: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
     companyId: routineSettingsMock.companyId,
     userId: userMock.id,
-    timestamp: new Date('2022-09-23'),
+    timestamp: cronGetNextExecutionDateFromTimestampMock,
   };
 
   let AnswerController: AnswerControllerClass;
@@ -263,54 +264,57 @@ describe('Answer Controller', () => {
         cronGetCurrentExecutionDateFromTimestampMock,
       );
 
-      cronServiceMock.isSameExecutionTimeSpan.mockReturnValue(true);
+      cronServiceMock.isSameExecutionTimeSpan
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true);
 
       const answer = [
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: '44bd7498-e528-4f96-b45e-3a2374790373',
           value: '2',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: 'd81e7754-79be-4638-89f3-a74875772d00',
           value: 'tava benzao',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
           value: '2',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: true,
           questionId: 'f0c6e297-7eb7-4b48-869c-aec96240ba2b',
           value: 'muita coisa pra fazer',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: '95b84e67-d5b6-4fcf-938a-b4c9897596cb',
           value: 'tarefinhas brabas',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: 'a1d5b993-9430-40bb-8f0f-47cda69720b9',
           value: 'outras tarefinhas brabas',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           type: 'road_block',
           questionId: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
@@ -318,54 +322,57 @@ describe('Answer Controller', () => {
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
           value: 'uns bagulhos ai',
         },
         {
           id: randomUUID(),
-          answerGroupId: 'ef9ba4c8-23b5-4e6e-aca8-9943f326747c',
+          answerGroupId: answerGroupsMock[0].id,
           hidden: false,
           questionId: 'fd7c26dd-38e3-41e7-b24a-78030653dc23',
           value: 'voa time',
         },
       ];
 
+      answer.forEach(() => {
+        cronServiceMock.getStartDayOfRoutine.mockReturnValueOnce(
+          answerGroupsMock[0].timestamp,
+        );
+      });
+
       answerServiceMock.answers.mockReturnValue(answer);
       messagingServiceMock.sendMessage.mockReturnValue(userMock);
 
       // Act
       const userAnswerDetailed = await AnswerController.getDetailedUserAnswer(
-        fakeAnswerGroupId,
+        answerGroupMock.id,
         userMock,
       );
 
       // Arrange
       const history = [
         {
-          id: answerGroupsMock[0].id,
           startDate: new Date('2022-08-26'),
           finishDate: new Date('2022-09-01'),
         },
         {
-          id: answerGroupsMock[0].id,
           startDate: new Date('2022-09-02'),
           finishDate: new Date('2022-09-08'),
         },
         {
-          id: answerGroupsMock[0].id,
           startDate: new Date('2022-09-09'),
           finishDate: new Date('2022-09-15'),
         },
         {
           id: answerGroupsMock[0].id,
-          startDate: new Date('2022-09-16'),
+          startDate: cronGetCurrentExecutionDateFromTimestampMock,
           finishDate: new Date('2022-09-22'),
         },
         {
-          id: answerGroupsMock[0].id,
-          startDate: new Date('2022-09-23'),
+          id: answerGroupMock.id,
+          startDate: cronGetNextExecutionDateFromTimestampMock,
           finishDate: new Date('2022-09-29'),
         },
       ].reverse();
@@ -387,7 +394,7 @@ describe('Answer Controller', () => {
               {
                 id: answer[0].id,
                 value: '2',
-                timestamp: new Date(answerGroupMock.timestamp),
+                timestamp: new Date(answerGroupsMock[0].timestamp),
               },
             ],
           },
@@ -413,7 +420,7 @@ describe('Answer Controller', () => {
               {
                 id: answer[2].id,
                 value: '2',
-                timestamp: new Date(answerGroupMock.timestamp),
+                timestamp: new Date(answerGroupsMock[0].timestamp),
               },
             ],
           },
@@ -445,29 +452,29 @@ describe('Answer Controller', () => {
             type: 'road_block',
             values: [
               {
-                id: answer[6].id,
-                value: answer[6].value,
-                timestamp: answerGroupsMock[0].timestamp,
+                id: null,
+                value: null,
+                timestamp: history[0].startDate,
               },
               {
                 id: answer[6].id,
                 value: answer[6].value,
-                timestamp: answerGroupsMock[0].timestamp,
+                timestamp: history[1].startDate,
               },
               {
-                id: answer[6].id,
-                value: answer[6].value,
-                timestamp: answerGroupsMock[0].timestamp,
+                id: null,
+                value: null,
+                timestamp: history[2].startDate,
               },
               {
-                id: answer[6].id,
-                value: answer[6].value,
-                timestamp: answerGroupsMock[0].timestamp,
+                id: null,
+                value: null,
+                timestamp: history[3].startDate,
               },
               {
-                id: answer[6].id,
-                value: answer[6].value,
-                timestamp: answerGroupsMock[0].timestamp,
+                id: null,
+                value: null,
+                timestamp: history[4].startDate,
               },
             ],
           },
