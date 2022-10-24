@@ -24,7 +24,7 @@ async function bootstrap() {
 
   const baseSettings = {
     disabledTeams: [],
-    cron: '* * * * 5',
+    cron: '0 0 * * 5',
   };
 
   await settings.globalRoutineSettingsCreation(user, baseSettings);
