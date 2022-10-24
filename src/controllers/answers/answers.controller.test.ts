@@ -39,7 +39,7 @@ describe('Answers Controller', () => {
       '968e8d90-c1dd-4d5c-948a-067e070ea269',
       'b6e555c7-3284-458f-83cd-86eb3aba08ad',
     ],
-    cron: '0 0 * 0 5',
+    cron: '0 0 * * 5',
   };
 
   const userMock: User = {

@@ -13,6 +13,7 @@ import { AnswerGroupWithAnswers } from '../../types/AnswerGroupWithAnswers';
 import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
+import * as dayjs from 'dayjs';
 
 interface FindAnswersQuery {
   before?: string;
@@ -112,6 +113,8 @@ export class AnswersController {
     @Param('teamId') teamId: string,
     @Query('includeSubteams')
     includeSubteams?: FindAnswersQuery['includeSubteams'],
+    @Query('after') after?: string,
+    @Query('before') before?: string,
   ) {
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',
@@ -133,36 +136,50 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
-    const rangeQuestions = form.filter(
+    const questions = form.filter(
       (question) =>
-        question.type === 'emoji_scale' || question.type === 'value_range',
+        question.type === 'emoji_scale' ||
+        question.type === 'value_range' ||
+        question.type === 'road_block',
     );
 
-    const rangeQuestionsId = rangeQuestions.map((question) => question.id);
-
-    const today = new Date();
-    const threeMonthsBefore = new Date(
-      new Date().setDate(new Date().getDate() - 92),
+    const roadBlockQuestion = form.find(
+      (question) => question.type === 'road_block',
     );
+
+    const questionsId = questions.map((question) => question.id);
+
+    const today = dayjs();
+    const threeMonthsBefore = today.subtract(3, 'months');
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: usersFromTeamIds },
-        timestamp: { lte: today, gte: threeMonthsBefore },
+        timestamp: {
+          lte: before ?? today.toDate(),
+          gte: after ?? threeMonthsBefore.toDate(),
+        },
       },
       include: {
         answers: {
           where: {
-            questionId: { in: rangeQuestionsId },
+            questionId: { in: questionsId },
           },
         },
       },
     });
 
     if (!answerGroups.length) {
-      return [];
+      return {
+        overview: {
+          feeling: [],
+          productivity: [],
+          roadblock: [],
+        },
+      };
     }
 
     const answerGroupsWithTimestamp = answerGroups.map((answerGroup) => {
@@ -176,7 +193,7 @@ export class AnswersController {
       AnswerGroupWithAnswers[]
     >(groupBy(answerGroupsWithTimestamp, 'timestamp'));
 
-    const answerGroupsByQuestions = rangeQuestionsId.map((questionId) => {
+    const answerGroupsByQuestions = questionsId.map((questionId) => {
       return groupedAnswerGroupsByTimestamp.map((groupedAnswerWeek) => {
         const answerGroupWithQuestionAnswers = groupedAnswerWeek.reduce<
           Partial<AnswerGroupWithAnswers>
@@ -194,6 +211,23 @@ export class AnswersController {
           { answers: [] },
         );
 
+        if (
+          answerGroupWithQuestionAnswers.answers[0].questionId ===
+          roadBlockQuestion.id
+        ) {
+          const trueAnswerValues =
+            answerGroupWithQuestionAnswers.answers.filter(
+              (answer) => answer.value.toLowerCase() === 'y',
+            );
+          return {
+            timestamp: answerGroupWithQuestionAnswers.timestamp,
+            average:
+              (trueAnswerValues.length /
+                answerGroupWithQuestionAnswers.answers.length) *
+              100,
+          };
+        }
+
         const answerValues = answerGroupWithQuestionAnswers.answers.map(
           (answer) => Number(answer.value),
         );
@@ -207,12 +241,13 @@ export class AnswersController {
       });
     });
 
-    const [feeling, productivity] = answerGroupsByQuestions;
+    const [feeling, productivity, roadblock] = answerGroupsByQuestions;
 
     return {
       overview: {
         feeling,
         productivity,
+        roadblock,
       },
     };
   }
