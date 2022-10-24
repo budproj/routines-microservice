@@ -14,7 +14,12 @@ async function bootstrap() {
     picture: '*.jpg',
     teams: [],
     companies: [],
-    permissions: ['routines:update:own', 'routines:update:any'],
+    permissions: [
+      'routines:create:team',
+      'routines:create:any',
+      'routines:update:team',
+      'routines:update:any',
+    ],
   };
 
   const baseSettings = {
