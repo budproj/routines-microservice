@@ -7,6 +7,7 @@ import { HealthCheckRestController } from './controllers/health-check/healthchec
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
 import { NatsController } from './controllers/nats/nats.controller';
 import { FormControler } from './controllers/forms/form.controller';
+import { AnswersController } from './controllers/answers/answers.controller';
 import { SettingsController } from './controllers/settings/settings.controller';
 
 import { HealthCheckDBService } from './services/healthcheck.db.service';
@@ -16,6 +17,7 @@ import { AnswerGroupService } from './services/answerGroup.service';
 import { CronService } from './services/cron.service';
 import { FormService } from './services/form.service';
 import { SecurityService } from './services/security.service';
+import { MessagingService } from './services/messaging.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
 import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
@@ -50,6 +52,7 @@ import configuration from './config/configuration';
     PendingRoutinesController,
     FormControler,
     AnswerController,
+    AnswersController,
     SettingsController,
   ],
   providers: [
@@ -61,6 +64,7 @@ import configuration from './config/configuration';
     AnswersService,
     CronService,
     FormService,
+    MessagingService,
     SecurityService,
   ],
 })
@@ -73,6 +77,7 @@ export class AppModule implements NestModule {
         PendingRoutinesController,
         FormControler,
         AnswerController,
+        AnswersController,
         SettingsController,
       );
   }

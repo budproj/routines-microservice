@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import * as cronParser from 'cron-parser';
+import { CronExpression } from 'cron-parser';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
 export enum Cadence {
   WEEKLY,
 }
+
+type Timespan = {
+  startDate: Date;
+  finishDate: Date;
+};
 
 @Injectable()
 export class CronService {
@@ -27,8 +33,15 @@ export class CronService {
     return `0 0 * * ${startDay}`;
   }
 
-  parse(cron: string): cronParser.CronExpression {
-    return cronParser.parseExpression(cron, { utc: true });
+  prev(expression: CronExpression): cronParser.CronDate {
+    return expression.prev();
+  }
+
+  parse(
+    cron: string,
+    options?: cronParser.ParserOptions<false>,
+  ): cronParser.CronExpression {
+    return cronParser.parseExpression(cron, { ...options, utc: true });
   }
 
   parseFromCadence(cadence: Cadence, startDate: Date) {
@@ -54,6 +67,52 @@ export class CronService {
     return daysOutdated;
   }
 
+  getTimespan(cronExpression: cronParser.CronExpression): Timespan {
+    const startDate = cronExpression.prev().toDate();
+    const finishDate = dayjs(cronExpression.next().toDate())
+      .subtract(1, 'day')
+      .toDate();
+    cronExpression.prev();
+    return {
+      startDate,
+      finishDate,
+    };
+  }
+
+  getMultipleTimespan(
+    cronExpression: cronParser.CronExpression,
+    timesToReturnTime: number,
+  ): Timespan[] {
+    const multipleTimespans: Timespan[] = [];
+
+    for (let i = timesToReturnTime; i > 0; i--) {
+      const timespan = this.getTimespan(cronExpression);
+
+      multipleTimespans.push(timespan);
+    }
+
+    return multipleTimespans;
+  }
+
+  getCurrentExecutionDateFromTimestamp(cron: string, date: Date): Date {
+    const cronExpression = this.parse(cron, {
+      utc: true,
+      currentDate: date,
+    });
+
+    const nextExecutionDate = cronExpression.prev().toDate();
+    return nextExecutionDate;
+  }
+
+  isSameExecutionTimeSpan(timespan: Date, timestamp: Date, cron: string) {
+    const currentExecutionDate = this.getCurrentExecutionDateFromTimestamp(
+      cron,
+      timestamp,
+    );
+
+    return currentExecutionDate.getUTCDate() === timespan.getUTCDate();
+  }
+
   addDaysToCron(cron: string, daysToAdd: number): string {
     const cronData = cron
       .split(' ')
@@ -76,5 +135,10 @@ export class CronService {
       .join(' ');
 
     return cronData;
+  }
+
+  getStartDayOfRoutine(timestamp: Date, cron: string) {
+    const parsedCron = this.parse(cron, { utc: true, currentDate: timestamp });
+    return parsedCron.prev().toDate();
   }
 }

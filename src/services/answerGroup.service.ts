@@ -5,10 +5,12 @@ import * as utc from 'dayjs/plugin/utc';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { User } from '../types/User';
+import { AnswerGroupWithAnswers } from '../types/AnswerGroupWithAnswers';
+import { CronService } from './cron.service';
 
 @Injectable()
 export class AnswerGroupService {
-  constructor(private prisma: PrismaService) {
+  constructor(private prisma: PrismaService, private cron: CronService) {
     dayjs.extend(utc);
   }
 
@@ -26,14 +28,16 @@ export class AnswerGroupService {
     cursor?: Prisma.AnswerGroupWhereUniqueInput;
     where?: Prisma.AnswerGroupWhereInput;
     orderBy?: Prisma.AnswerGroupOrderByWithRelationInput;
-  }): Promise<AnswerGroup[]> {
-    const { skip, take, cursor, where, orderBy } = params;
+    include?: Prisma.AnswerGroupInclude;
+  }): Promise<AnswerGroupWithAnswers[]> {
+    const { skip, take, cursor, where, orderBy, include } = params;
     return this.prisma.answerGroup.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+      include,
     });
   }
 
@@ -94,5 +98,22 @@ export class AnswerGroupService {
     const answeredWithinTimeSpan =
       differenceInDaysFromToday <= timeSpanForAnwser;
     return answeredWithinTimeSpan;
+  }
+
+  parseAnswerTimestamp(
+    answerGroup: AnswerGroup,
+    cron: string,
+  ): AnswerGroupWithAnswers {
+    const dayJsTimestamp = dayjs(answerGroup.timestamp);
+
+    const newTimestamp = this.cron.getStartDayOfRoutine(
+      dayJsTimestamp.toDate(),
+      cron,
+    );
+
+    return {
+      ...answerGroup,
+      timestamp: newTimestamp,
+    };
   }
 }
