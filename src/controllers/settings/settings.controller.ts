@@ -61,7 +61,8 @@ export class SettingsController {
       companyId,
     };
 
-    const createdSettings = await this.routineSettings.createRoutineSettings(
+    const createdSettings = await this.routineSettings.upsertRoutineSettings(
+      { companyId },
       settingsWithCompany,
     );
 
