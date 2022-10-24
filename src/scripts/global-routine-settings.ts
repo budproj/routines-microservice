@@ -29,10 +29,5 @@ async function bootstrap() {
 
   await settings.globalRoutineSettingsCreation(user, baseSettings);
   await app.close();
-
-  const timeoutInMS = 10 * 60 * 1000;
-  setTimeout(() => {
-    process.exit();
-  }, timeoutInMS);
 }
 bootstrap();
