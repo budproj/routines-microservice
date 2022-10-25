@@ -13,6 +13,7 @@ import { AnswerGroupWithAnswers } from '../../types/AnswerGroupWithAnswers';
 import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
+import * as dayjs from 'dayjs';
 
 interface FindAnswersQuery {
   before?: string;
@@ -200,8 +201,12 @@ export class AnswersController {
 
         const mean = meanBy(answerValues);
 
+        const timestamp = dayjs(
+          answerGroupWithQuestionAnswers.timestamp,
+        ).format('YYYY-MM-DDTHH:mm:ss');
+
         return {
-          timestamp: answerGroupWithQuestionAnswers.timestamp,
+          timestamp,
           average: mean,
         };
       });
