@@ -28,7 +28,7 @@
   "dependencies": {
     "@nestjs/common": "^9.1.6",
     "@nestjs/config": "^2.2.0",
-    "@nestjs/core": "^9.1.1",
+    "@nestjs/core": "^9.1.6",
     "@nestjs/microservices": "^9.1.1",
     "@nestjs/platform-express": "^9.1.1",
     "@prisma/client": "^4.3.1",
