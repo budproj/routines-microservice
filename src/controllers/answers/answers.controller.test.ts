@@ -257,8 +257,13 @@ describe('Answers Controller', () => {
         userMock,
         userMock.teams[0].id,
       );
+
       // assert
-      expect(teamOverview).toEqual([]);
+      expect(teamOverview).toHaveProperty('overview', {
+        feeling: [],
+        productivity: [],
+        roadblock: [],
+      });
     });
 
     it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
