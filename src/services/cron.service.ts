@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as cronParser from 'cron-parser';
-import { CronExpression, ParserOptions } from 'cron-parser';
+import { CronExpression } from 'cron-parser';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
@@ -33,12 +33,15 @@ export class CronService {
     return `0 0 * * ${startDay}`;
   }
 
-  parse(cron: string, options?: ParserOptions): cronParser.CronExpression {
-    return cronParser.parseExpression(cron, { utc: true, ...options });
-  }
-
   prev(expression: CronExpression): cronParser.CronDate {
     return expression.prev();
+  }
+
+  parse(
+    cron: string,
+    options?: cronParser.ParserOptions<false>,
+  ): cronParser.CronExpression {
+    return cronParser.parseExpression(cron, { ...options, utc: true });
   }
 
   parseFromCadence(cadence: Cadence, startDate: Date) {
@@ -135,7 +138,7 @@ export class CronService {
   }
 
   getStartDayOfRoutine(timestamp: Date, cron: string) {
-    const parsedCron = this.parse(cron, { currentDate: timestamp });
+    const parsedCron = this.parse(cron, { utc: true, currentDate: timestamp });
     return parsedCron.prev().toDate();
   }
 }

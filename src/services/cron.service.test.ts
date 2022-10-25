@@ -117,8 +117,9 @@ describe('Cron Service', () => {
   describe('getTimespan', () => {
     it('should return the timespam for a given cron expression', () => {
       // arrange
-      jest.useFakeTimers({ now: new Date('2022-10-04') });
-      const expression = cronParser.parseExpression('0 0 * * 5');
+      const expression = cronParser.parseExpression('0 0 * * 5', {
+        currentDate: new Date('2022-10-03'),
+      });
 
       // act
       const timespan = cronService.getTimespan(expression);
@@ -148,29 +149,29 @@ describe('Cron Service', () => {
 
     it('should return multiple timespans for a given cron expression', () => {
       // arrange
-      jest.useFakeTimers({ now: new Date('2022-09-29 10:00:00z') });
-      const expression = cronParser.parseExpression('0 0 * * 5');
+      const expression = cronParser.parseExpression('0 0 * * 5', {
+        utc: true,
+        currentDate: new Date('2022-09-30'),
+      });
 
       // act
       const timespans = cronService.getMultipleTimespan(expression, 3);
 
       // assert
-      expect(timespans).toEqual(
-        expect.arrayContaining([
-          {
-            startDate: dayjs('2022-09-09').utc().toDate(),
-            finishDate: dayjs('2022-09-15').utc().toDate(),
-          },
-          {
-            startDate: dayjs('2022-09-16').utc().toDate(),
-            finishDate: dayjs('2022-09-22').utc().toDate(),
-          },
-          {
-            startDate: dayjs('2022-09-23').utc().toDate(),
-            finishDate: dayjs('2022-09-29').utc().toDate(),
-          },
-        ]),
-      );
+      expect(timespans).toEqual([
+        {
+          startDate: new Date('2022-09-23'),
+          finishDate: new Date('2022-09-29'),
+        },
+        {
+          startDate: new Date('2022-09-16'),
+          finishDate: new Date('2022-09-22'),
+        },
+        {
+          startDate: new Date('2022-09-09'),
+          finishDate: new Date('2022-09-15'),
+        },
+      ]);
     });
   });
 
