@@ -40,9 +40,11 @@ export class SettingsController {
       this.nats.send('core-ports.get-companies', {}),
     );
 
-    companies.forEach((company) => {
-      this.createSettings(user, company.id, settings);
+    const createPromises = companies.map((company) => {
+      return this.createSettings(user, company.id, settings);
     });
+
+    await Promise.all(createPromises);
   }
 
   @Post('/:companyId')
@@ -59,7 +61,8 @@ export class SettingsController {
       companyId,
     };
 
-    const createdSettings = await this.routineSettings.createRoutineSettings(
+    const createdSettings = await this.routineSettings.upsertRoutineSettings(
+      { companyId },
       settingsWithCompany,
     );
 
