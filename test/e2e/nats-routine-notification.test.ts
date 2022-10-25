@@ -31,17 +31,22 @@ describe('NATS - Routine Notification', () => {
     await dbConnection.$disconnect();
   });
 
-  it('should process and send notification messages to business', async () => {
+  it('should process and send empty team and send message to pendencies qeue', async () => {
     // Arrange
-    const input = { id: '123', companyId: '123', disabledTeams: [] };
+    const input = {
+      id: randomUUID(),
+      companyId: randomUUID(),
+      disabledTeams: [],
+      cron: '0 0 * * 5',
+    };
     const replyQueue = 'notification-ports.PENDENCIES-NOTIFICATION';
 
-    natsConnection.subscribe('core-ports.get-team-members', {
+    natsConnection.subscribe('core-ports.get-users-from-team', {
       callback: (error, msg) => msg.respond(jsonCodec.encode([])),
     });
 
-    natsConnection.subscribe('core-ports.get-user-team-tree', {
-      callback: (error, msg) => msg.respond(jsonCodec.encode([])),
+    await dbConnection.routineSettings.create({
+      data: input,
     });
 
     //Act

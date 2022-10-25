@@ -74,7 +74,6 @@ export class AppModule implements NestModule {
     consumer
       .apply(UserValidatorMiddleware)
       .forRoutes(
-        HealthCheckRestController,
         PendingRoutinesController,
         FormControler,
         AnswerController,

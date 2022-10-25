@@ -29,7 +29,7 @@ export class NatsController {
   async onHealthCheck(@Payload() data: { id: string; reply: string }) {
     const response = await this.healthCheckDB.patch(data.id);
 
-    this.nats.emit(data.reply, true);
+    await this.nats.emit(data.reply, true);
   }
 
   @MessagePattern('routine-notification', Transport.NATS)
