@@ -46,6 +46,17 @@ export class RoutineSettingsService {
     });
   }
 
+  async upsertRoutineSettings(
+    where: Prisma.RoutineSettingsWhereUniqueInput,
+    data: Prisma.RoutineSettingsCreateInput,
+  ): Promise<RoutineSettings> {
+    return this.prisma.routineSettings.upsert({
+      where,
+      create: data,
+      update: data,
+    });
+  }
+
   async updateRoutineSettings(params: {
     where: Prisma.RoutineSettingsWhereUniqueInput;
     data: Prisma.RoutineSettingsUpdateInput;
@@ -88,10 +99,6 @@ export class RoutineSettingsService {
       : false;
   }
 
-  teamOptedOut(disabledTeamsIds: string[], teamId: string): boolean {
-    return disabledTeamsIds.includes(teamId);
-  }
-
   async getCurrentRoutineDate(id: string) {
     const routineSettings = await this.routineSettings({
       id: id,
@@ -120,5 +127,9 @@ export class RoutineSettingsService {
       (team) => !disabledTeamsIds.includes(team.id),
     );
     return { ...user, teams: userTeamsWithRoutineEnabled };
+  }
+
+  teamOptedOut(disabledTeamsIds: string[], teamId: string): boolean {
+    return disabledTeamsIds.includes(teamId);
   }
 }
