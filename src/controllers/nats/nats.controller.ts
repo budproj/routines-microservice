@@ -1,4 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
@@ -6,8 +7,12 @@ import { User } from 'src/types/User';
 import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
-import { CronService } from '../../services/cron.service';
-import { randomUUID } from 'crypto';
+
+interface RoutineData {
+  id: string;
+  companyId: string;
+  disabledTeams: string[];
+}
 
 @Controller()
 export class NatsController {
@@ -16,7 +21,6 @@ export class NatsController {
     private nats: MessagingService,
     private routineSettings: RoutineSettingsService,
     private answerGroupService: AnswerGroupService,
-    private cronService: CronService,
   ) {}
 
   private readonly logger = new Logger(NatsController.name);
@@ -27,15 +31,11 @@ export class NatsController {
 
     this.nats.emit(data.reply, true);
   }
+
   @MessagePattern('routine-notification', Transport.NATS)
-  async routineNotification(
-    @Payload()
-    routineData: {
-      id: string;
-      companyId: string;
-      disabledTeams: string[];
-    },
-  ) {
+  async routineNotification(@Payload() routineData: RoutineData) {
+    this.logger.log('New routine notification message with data:', routineData);
+
     const companyUsers = await this.nats.sendMessage<any, User[]>(
       'core-ports.get-users-from-team',
       {
@@ -82,41 +82,15 @@ export class NatsController {
       companyUsers,
       usersWithPendingRoutines,
     });
-
-    const timestamp = new Date().toISOString();
-
-    const messages = usersWithPendingRoutines
-      .map((user) =>
-        user.teams.map((team) => ({
-          messageId: randomUUID(),
-          type: 'routine',
-          timestamp: timestamp,
-          recipientId: user.authzSub,
-          properties: {
-            sender: {},
-            team: {
-              name: team.name,
-              id: team.id,
-            },
-          },
-        })),
-      )
-      .flat();
-
-    messages.forEach((message) =>
-      this.nats.sendMessage('notification', message),
-    );
   }
 
   @MessagePattern('routine-reminder-notification', Transport.NATS)
-  async routineReminder(
-    @Payload()
-    routineData: {
-      id: string;
-      companyId: string;
-      disabledTeams: string[];
-    },
-  ) {
+  async routineReminder(@Payload() routineData: RoutineData) {
+    this.logger.log(
+      'New routine reminder notification message with data:',
+      routineData,
+    );
+
     const companyUsers = await this.nats.sendMessage<any, User[]>(
       'core-ports.get-users-from-team',
       {
@@ -157,13 +131,13 @@ export class NatsController {
         .map((user) =>
           user.teams.map((team) => ({
             messageId: randomUUID(),
-            type: 'routine',
+            type: 'routineReminder',
             timestamp: timestamp,
             recipientId: user.authzSub,
             properties: {
               sender: {},
               team: {
-                name: team.name,
+                name: team?.name ?? '',
                 id: team.id,
               },
             },
@@ -171,9 +145,10 @@ export class NatsController {
         )
         .flat();
 
-      messages.forEach((message) =>
-        this.nats.sendMessage('notification', message),
-      );
+      messages.forEach((message) => {
+        this.logger.log('Sending notification', message);
+        this.nats.emit('notification', message);
+      });
     }
   }
 }
