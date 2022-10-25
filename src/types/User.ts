@@ -9,5 +9,4 @@ export interface User {
   picture: string;
   authzSub?: string;
   permissions: string[];
-  authzSub?: string;
 }
