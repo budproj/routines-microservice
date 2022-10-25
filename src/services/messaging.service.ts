@@ -8,4 +8,8 @@ export class MessagingService {
   async sendMessage<T, R>(channel: string, data: T): Promise<R> {
     return lastValueFrom<R>(this.nats.send(channel, data));
   }
+
+  async emit(pattern, data) {
+    return this.nats.emit(pattern, data);
+  }
 }
