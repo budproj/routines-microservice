@@ -82,30 +82,6 @@ export class NatsController {
       companyUsers,
       usersWithPendingRoutines,
     });
-
-    const timestamp = new Date().toISOString();
-
-    const messages = usersWithPendingRoutines
-      .map((user) =>
-        user.teams.map((team) => ({
-          messageId: randomUUID(),
-          type: 'routine',
-          timestamp: timestamp,
-          recipientId: user.authzSub,
-          properties: {
-            sender: {},
-            team: {
-              name: team?.name ?? '',
-              id: team.id,
-            },
-          },
-        })),
-      )
-      .flat();
-
-    messages.forEach((message) =>
-      this.nats.sendMessage('notification', message),
-    );
   }
 
   @MessagePattern('routine-reminder-notification', Transport.NATS)
