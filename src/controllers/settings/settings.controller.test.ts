@@ -17,7 +17,7 @@ describe('Settings Controller', () => {
   const lastValueFromMock = jest.spyOn(rxjs, 'lastValueFrom');
 
   const routineSettingsServiceMock = {
-    createRoutineSettings: jest.fn(),
+    upsertRoutineSettings: jest.fn(),
     updateRoutineSettings: jest.fn(),
     routineSettings: jest.fn(),
   };
@@ -72,7 +72,7 @@ describe('Settings Controller', () => {
   describe('createSettings', () => {
     it('should save only the routine settings to database', async () => {
       // Arrange
-      routineSettingsServiceMock.createRoutineSettings.mockResolvedValueOnce(
+      routineSettingsServiceMock.upsertRoutineSettings.mockResolvedValueOnce(
         settings,
       );
 
@@ -80,13 +80,16 @@ describe('Settings Controller', () => {
       await controller.createSettings(userMock, company.id, settings);
 
       // Assert
-      expect(routineSettingsServiceMock.createRoutineSettings).toBeCalledTimes(
+      expect(routineSettingsServiceMock.upsertRoutineSettings).toBeCalledTimes(
         1,
       );
-      expect(routineSettingsServiceMock.createRoutineSettings).toBeCalledWith({
-        ...settings,
-        companyId: company.id,
-      });
+      expect(routineSettingsServiceMock.upsertRoutineSettings).toBeCalledWith(
+        { companyId: company.id },
+        {
+          ...settings,
+          companyId: company.id,
+        },
+      );
     });
 
     it('should schedule the routine notifications for the given company', async () => {
@@ -95,7 +98,7 @@ describe('Settings Controller', () => {
         id: randomUUID(),
         ...settings,
       };
-      routineSettingsServiceMock.createRoutineSettings.mockResolvedValueOnce(
+      routineSettingsServiceMock.upsertRoutineSettings.mockResolvedValueOnce(
         createdSettings,
       );
 
@@ -117,7 +120,7 @@ describe('Settings Controller', () => {
 
     it('should return the saved routine settings', async () => {
       // Arrange
-      routineSettingsServiceMock.createRoutineSettings.mockResolvedValueOnce(
+      routineSettingsServiceMock.upsertRoutineSettings.mockResolvedValueOnce(
         settings,
       );
 
