@@ -10,6 +10,6 @@ export class MessagingService {
   }
 
   async emit(pattern, data) {
-    this.nats.send(pattern, data);
+    this.nats.emit(pattern, data);
   }
 }
