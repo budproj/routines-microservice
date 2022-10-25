@@ -142,7 +142,7 @@ describe('Cron Service', () => {
       cronService.getMultipleTimespan(expression, 3);
 
       // assert
-      expect(prevSpy).toBeCalledTimes(7);
+      expect(prevSpy).toBeCalledTimes(6);
       expect(getTimespanSpy).toBeCalledTimes(3);
     });
 
@@ -178,19 +178,25 @@ describe('Cron Service', () => {
     it('should return the next execution date from a given cron starting at a given date', () => {
       // arrange
       const cron = '0 0 * * 5';
-      const date = new Date();
-      const parseSpy = jest.spyOn(cronParser, 'parseExpression');
-      const prevSpy = jest.spyOn(cronService, 'prev');
+      const date = new Date('2022-09-21');
+      const parsedDate = cronParser.parseExpression(cron, {
+        utc: true,
+        currentDate: date,
+      });
+      const parseSpy = jest
+        .spyOn(cronService, 'parse')
+        .mockReturnValueOnce(parsedDate);
 
       // act
-      const nextExecutionDate =
-        cronService.getCurrentExecutionDateFromTimestamp(cron, date);
+      const currentExecution = cronService.getCurrentExecutionDateFromTimestamp(
+        cron,
+        date,
+      );
 
       // assert
       expect(parseSpy).toBeCalledTimes(1);
-      expect(parseSpy).toBeCalledWith(cron, { currentDate: date });
-      expect(prevSpy).toBeCalledTimes(1);
-      expect(nextExecutionDate).toEqual(dayjs('2022-09-23').utc().toDate());
+      expect(parseSpy).toBeCalledWith(cron, { utc: true, currentDate: date });
+      expect(currentExecution).toEqual(new Date('2022-09-16'));
     });
   });
 

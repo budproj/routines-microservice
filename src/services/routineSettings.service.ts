@@ -46,6 +46,17 @@ export class RoutineSettingsService {
     });
   }
 
+  async upsertRoutineSettings(
+    where: Prisma.RoutineSettingsWhereUniqueInput,
+    data: Prisma.RoutineSettingsCreateInput,
+  ): Promise<RoutineSettings> {
+    return this.prisma.routineSettings.upsert({
+      where,
+      create: data,
+      update: data,
+    });
+  }
+
   async updateRoutineSettings(params: {
     where: Prisma.RoutineSettingsWhereUniqueInput;
     data: Prisma.RoutineSettingsUpdateInput;

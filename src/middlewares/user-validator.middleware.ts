@@ -47,8 +47,6 @@ export class UserValidatorMiddleware implements NestMiddleware {
       permissions: decodedToken.permissions,
     };
 
-    this.logger.log('Injecting user data', req.user);
-
     next();
   }
 }

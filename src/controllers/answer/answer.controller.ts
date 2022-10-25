@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import * as dayjs from 'dayjs';
 
 import { User } from '../../decorators/user.decorator';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -12,6 +13,7 @@ import { RoutineFormLangs } from '../../services/constants/form';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { CronService } from '../../services/cron.service';
 import { AnswersService } from '../../services/answers.service';
+import { MessagingService } from '../../services/messaging.service';
 
 @Controller('/answer')
 export class AnswerController {
@@ -21,6 +23,7 @@ export class AnswerController {
     private routineFormService: FormService,
     private routineSettingsService: RoutineSettingsService,
     private cronService: CronService,
+    private messaging: MessagingService,
   ) {}
 
   @Post()
@@ -69,9 +72,9 @@ export class AnswerController {
     return teams;
   }
 
-  @Get()
+  @Get('/:answerId')
   async getDetailedUserAnswer(
-    @Query('answerId') id: string,
+    @Param('answerId') id: string,
     @User() user: UserType,
   ) {
     const answerGroup = await this.answerGroupService.answerGroup({
@@ -93,7 +96,6 @@ export class AnswerController {
     });
 
     const cronExpression = this.cronService.parse(settings.cron, {
-      utc: true,
       currentDate: answerGroup.timestamp,
     });
 
@@ -112,7 +114,7 @@ export class AnswerController {
       take: 4,
       orderBy: { timestamp: 'desc' },
       where: {
-        userId: user.id,
+        userId: answerGroup.userId,
         id: { not: answerGroup.id },
         timestamp: { lte: secondCronExpressionExecution.toDate() },
       },
@@ -122,7 +124,7 @@ export class AnswerController {
       const answeredHistory = [...previousAnswerGroups, answerGroup].find(
         ({ timestamp }) =>
           this.cronService.isSameExecutionTimeSpan(
-            timespan,
+            timespan.startDate,
             timestamp,
             settings.cron,
           ),
@@ -138,7 +140,9 @@ export class AnswerController {
 
     const previousAnswers = await this.answersService.answers({
       where: {
-        answerGroupId: { in: previousAnswerGroups.map(({ id }) => id) },
+        answerGroupId: {
+          in: previousAnswerGroups.map(({ id }) => id),
+        },
       },
     });
 
@@ -170,14 +174,24 @@ export class AnswerController {
           formQuestion.type === 'value_range' ||
           formQuestion.type === 'road_block'
         ) {
+          // console.log({ previousAnswerGroups, previousAnswers });
           const previousAnswersFromThisQuestion = previousAnswers
             .filter((answer) => answer.questionId === formQuestion.id)
-            .map(({ id, value, answerGroupId }) => ({
-              id,
-              value: value,
-              timestamp: previousAnswerGroups.find(
-                ({ id }) => id === answerGroupId,
-              ).timestamp,
+            .map(({ id, value, answerGroupId }) => {
+              return {
+                id,
+                value: value,
+                timestamp: previousAnswerGroups.find(
+                  ({ id }) => id === answerGroupId,
+                ).timestamp,
+              };
+            })
+            .map((answer) => ({
+              ...answer,
+              timestamp: this.cronService.getStartDayOfRoutine(
+                answer.timestamp,
+                settings.cron,
+              ),
             }))
             .sort((x, y) => x.timestamp.getTime() - y.timestamp.getTime());
 
@@ -186,31 +200,30 @@ export class AnswerController {
             {
               id: currentAnswerFromThisQuestion.id,
               value: currentAnswerFromThisQuestion?.value,
-              timestamp: answerGroup.timestamp,
+              timestamp: this.cronService.getStartDayOfRoutine(
+                answerGroup.timestamp,
+                settings.cron,
+              ),
             },
           ];
 
-          const history = historyTimespans.map((timespan) => {
-            const answeredRoadblock = values.find(({ timestamp }) =>
-              this.cronService.isSameExecutionTimeSpan(
-                timespan,
-                timestamp,
-                settings.cron,
-              ),
-            );
+          const roadBlockHistory = historyTimespans.map((timespan) => {
+            const answeredRoadblock = values.find(({ timestamp }) => {
+              return dayjs(timespan.startDate).isSame(timestamp);
+            });
 
-            return (
-              answeredRoadblock ?? {
-                id: Math.random(),
-                value: null,
-                timestamp: timespan.startDate,
-              }
-            );
+            return {
+              id: null,
+              value: null,
+              timestamp: timespan.startDate,
+              ...(answeredRoadblock ?? {}),
+            };
           });
 
           return {
             ...formatedQuestion,
-            values: formQuestion.type === 'road_block' ? history : values,
+            values:
+              formQuestion.type === 'road_block' ? roadBlockHistory : values,
           };
         }
         return {
@@ -221,8 +234,13 @@ export class AnswerController {
     });
 
     const validAnswers = userAnswers.filter((answer) => answer);
+    const userThatAnswered = await this.messaging.sendMessage<
+      UserType['id'],
+      UserType
+    >('core-ports.get-user', answerGroup.userId);
 
     const answerDetails = {
+      user: userThatAnswered,
       history: history,
       answers: validAnswers,
     };

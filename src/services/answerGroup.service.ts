@@ -113,7 +113,7 @@ export class AnswerGroupService {
 
     return {
       ...answerGroup,
-      timestamp: newTimestamp.toDate(),
+      timestamp: newTimestamp,
     };
   }
 }

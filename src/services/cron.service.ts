@@ -93,23 +93,21 @@ export class CronService {
 
   getCurrentExecutionDateFromTimestamp(cron: string, date: Date): Date {
     const cronExpression = this.parse(cron, {
+      utc: true,
       currentDate: date,
     });
 
-    const nextExecutionDate = this.prev(cronExpression).toDate();
-
+    const nextExecutionDate = cronExpression.prev().toDate();
     return nextExecutionDate;
   }
 
-  isSameExecutionTimeSpan(timespan, timestamp, cron) {
+  isSameExecutionTimeSpan(timespan: Date, timestamp: Date, cron: string) {
     const currentExecutionDate = this.getCurrentExecutionDateFromTimestamp(
       cron,
       timestamp,
     );
 
-    return (
-      currentExecutionDate.getUTCDate() === timespan.startDate.getUTCDate()
-    );
+    return currentExecutionDate.getUTCDate() === timespan.getUTCDate();
   }
 
   addDaysToCron(cron: string, daysToAdd: number): string {
@@ -138,6 +136,6 @@ export class CronService {
 
   getStartDayOfRoutine(timestamp: Date, cron: string) {
     const parsedCron = this.parse(cron, { currentDate: timestamp });
-    return parsedCron.prev();
+    return parsedCron.prev().toDate();
   }
 }
