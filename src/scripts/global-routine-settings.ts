@@ -14,20 +14,20 @@ async function bootstrap() {
     picture: '*.jpg',
     teams: [],
     companies: [],
-    permissions: ['routines:update:own', 'routines:update:any'],
+    permissions: [
+      'routines:create:team',
+      'routines:create:any',
+      'routines:update:team',
+      'routines:update:any',
+    ],
   };
 
   const baseSettings = {
     disabledTeams: [],
-    cron: '* * * * 5',
+    cron: '0 0 * * 5',
   };
 
   await settings.globalRoutineSettingsCreation(user, baseSettings);
   await app.close();
-
-  const timeoutInMS = 10 * 60 * 1000;
-  setTimeout(() => {
-    process.exit();
-  }, timeoutInMS);
 }
 bootstrap();
