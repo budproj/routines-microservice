@@ -98,6 +98,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -122,6 +124,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -147,6 +151,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
         {
@@ -183,6 +189,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
         {
@@ -213,6 +221,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -249,6 +259,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -274,6 +285,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
@@ -285,6 +297,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -294,6 +307,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -303,6 +317,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'y', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -337,6 +352,13 @@ describe('Answers Controller', () => {
               timestamp: '2022-09-15T11:09:31.143Z',
             },
           ],
+          roadblock: [
+            {
+              average: 1,
+              timestamp: '2022-09-15T11:09:31.143Z',
+              total: 3,
+            },
+          ],
         },
       });
     });
@@ -352,6 +374,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       const answerGroupsMocks = [
         {
@@ -359,6 +382,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -368,6 +392,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -377,6 +402,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -412,6 +438,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
@@ -423,6 +450,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -432,6 +460,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -441,6 +470,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,

@@ -221,10 +221,8 @@ export class AnswersController {
             );
           return {
             timestamp: answerGroupWithQuestionAnswers.timestamp,
-            average:
-              (trueAnswerValues.length /
-                answerGroupWithQuestionAnswers.answers.length) *
-              100,
+            total: answerGroupWithQuestionAnswers.answers.length,
+            average: trueAnswerValues.length,
           };
         }
 
