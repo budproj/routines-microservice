@@ -39,7 +39,7 @@ describe('Answers Controller', () => {
       '968e8d90-c1dd-4d5c-948a-067e070ea269',
       'b6e555c7-3284-458f-83cd-86eb3aba08ad',
     ],
-    cron: '0 0 * 0 5',
+    cron: '0 0 * * 5',
   };
 
   const userMock: User = {
@@ -98,6 +98,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -122,6 +124,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -147,6 +151,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
         {
@@ -183,6 +189,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
         {
@@ -213,6 +221,8 @@ describe('Answers Controller', () => {
         .mockResolvedValueOnce([userMock]);
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
+        { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -249,6 +259,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce([]);
 
@@ -257,8 +268,13 @@ describe('Answers Controller', () => {
         userMock,
         userMock.teams[0].id,
       );
+
       // assert
-      expect(teamOverview).toEqual([]);
+      expect(teamOverview).toHaveProperty('overview', {
+        feeling: [],
+        productivity: [],
+        roadblock: [],
+      });
     });
 
     it('should return an object of overview containing the feeling and productivity weekly mean from team users answers', async () => {
@@ -269,6 +285,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
@@ -280,6 +297,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -289,6 +307,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -298,6 +317,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'y', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -332,6 +352,13 @@ describe('Answers Controller', () => {
               timestamp: '2022-09-15T11:09:31.143Z',
             },
           ],
+          roadblock: [
+            {
+              average: 1,
+              timestamp: '2022-09-15T11:09:31.143Z',
+              total: 3,
+            },
+          ],
         },
       });
     });
@@ -347,6 +374,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       const answerGroupsMocks = [
         {
@@ -354,6 +382,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -363,6 +392,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -372,6 +402,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -407,6 +438,7 @@ describe('Answers Controller', () => {
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
+        { type: 'road_block', id: '3' },
       ]);
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
@@ -418,6 +450,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -427,6 +460,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
@@ -436,6 +470,7 @@ describe('Answers Controller', () => {
           answers: [
             { value: 1, questionId: '1' },
             { value: 3, questionId: '2' },
+            { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
           userId: userMock.id,
