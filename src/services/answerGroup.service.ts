@@ -93,7 +93,10 @@ export class AnswerGroupService {
   }
 
   answeredWithinTimeSpan(answerDate: Date, timeSpanForAnwser: Date): boolean {
-    return dayjs(answerDate).isAfter(timeSpanForAnwser);
+    return (
+      dayjs(answerDate).isSame(timeSpanForAnwser, 'day') ??
+      dayjs(answerDate).isAfter(timeSpanForAnwser)
+    );
   }
 
   parseAnswerTimestamp(
