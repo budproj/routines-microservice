@@ -64,6 +64,7 @@ export class SettingsController {
     const createdSettings = await this.routineSettings.upsertRoutineSettings(
       { companyId },
       settingsWithCompany,
+      {},
     );
 
     const routineNotificationData = {

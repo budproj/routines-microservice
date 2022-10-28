@@ -89,6 +89,7 @@ describe('Settings Controller', () => {
           ...settings,
           companyId: company.id,
         },
+        {},
       );
     });
 
