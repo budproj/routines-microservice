@@ -54,6 +54,7 @@ export class CronService {
 
     const isRunningDate = previousRunDate.diff(currentDate, 'days') === 0;
     if (isRunningDate) {
+      cronExpression.next();
       return 0;
     }
 
@@ -65,9 +66,12 @@ export class CronService {
   }
 
   getTimespan(cronExpression: cronParser.CronExpression): Timespan {
-    const startDate = cronExpression.prev().toDate();
+    const startDate = dayjs(cronExpression.prev().toDate())
+      .startOf('day')
+      .toDate();
     const finishDate = dayjs(cronExpression.next().toDate())
       .subtract(1, 'day')
+      .startOf('day')
       .toDate();
     cronExpression.prev();
     return {

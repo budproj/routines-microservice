@@ -92,12 +92,8 @@ export class AnswerGroupService {
     return latestAnswer;
   }
 
-  answeredWithinTimeSpan(answerDate: Date, timeSpanForAnwser: number): boolean {
-    const todayUtcDate = dayjs().utc();
-    const differenceInDaysFromToday = todayUtcDate.diff(answerDate, 'day');
-    const answeredWithinTimeSpan =
-      differenceInDaysFromToday <= timeSpanForAnwser;
-    return answeredWithinTimeSpan;
+  answeredWithinTimeSpan(answerDate: Date, timeSpanForAnwser: Date): boolean {
+    return dayjs(answerDate).isAfter(timeSpanForAnwser);
   }
 
   parseAnswerTimestamp(
