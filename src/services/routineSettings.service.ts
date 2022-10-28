@@ -48,12 +48,13 @@ export class RoutineSettingsService {
 
   async upsertRoutineSettings(
     where: Prisma.RoutineSettingsWhereUniqueInput,
-    data: Prisma.RoutineSettingsCreateInput,
+    createData: Prisma.RoutineSettingsCreateInput,
+    updateData: Partial<Prisma.RoutineSettingsCreateInput>,
   ): Promise<RoutineSettings> {
     return this.prisma.routineSettings.upsert({
       where,
-      create: data,
-      update: data,
+      create: createData,
+      update: updateData,
     });
   }
 
