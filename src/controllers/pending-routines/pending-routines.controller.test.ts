@@ -15,7 +15,6 @@ beforeEach(jest.resetAllMocks);
 describe('Pending Routines Controller', () => {
   const routineServiceMock = {
     routine: jest.fn(),
-    getTimeSpanForAnwser: jest.fn(),
   };
 
   const answerGroupServiceMock = {
@@ -27,6 +26,7 @@ describe('Pending Routines Controller', () => {
   const cronServiceMock = {
     parse: jest.fn(),
     daysOutdated: jest.fn(),
+    getTimespan: jest.fn(),
   };
 
   const routineSettingsServiceMock = {
@@ -64,6 +64,12 @@ describe('Pending Routines Controller', () => {
     companyId: routineSettingsMock.companyId,
     userId: userMock.id,
     timestamp: new Date(),
+  };
+
+  const parseReturn = {};
+  const timespan = {
+    startDate: new Date('2022-10-28'),
+    finishDate: new Date('2022-11-03'),
   };
 
   let RoutineController: PendingRoutinesController;
@@ -129,7 +135,6 @@ describe('Pending Routines Controller', () => {
 
     it('should return the routine if the user has never replied', async () => {
       // Arrange
-      const parseReturn = {};
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
       );
@@ -158,9 +163,8 @@ describe('Pending Routines Controller', () => {
       expect(cronServiceMock.daysOutdated).toBeCalledWith(parseReturn);
     });
 
-    it('should not return the routine if the user has replied in the last 7 days', async () => {
+    it('should not return the routine if the user has replied within the routine timespan', async () => {
       // Arrange
-      const routineTimeSpan = 7;
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
       );
@@ -168,9 +172,8 @@ describe('Pending Routines Controller', () => {
       answerGroupServiceMock.latestAnswerFromUser.mockResolvedValueOnce(
         answerMock,
       );
-      routineServiceMock.getTimeSpanForAnwser.mockReturnValueOnce(
-        routineTimeSpan,
-      );
+      cronServiceMock.parse.mockReturnValueOnce(parseReturn);
+      cronServiceMock.getTimespan.mockReturnValueOnce(timespan);
       answerGroupServiceMock.answeredWithinTimeSpan.mockReturnValueOnce(true);
 
       // Act
@@ -180,13 +183,12 @@ describe('Pending Routines Controller', () => {
       expect(routines).toEqual([]);
       expect(answerGroupServiceMock.answeredWithinTimeSpan).toBeCalledWith(
         dayjs(answerMock.timestamp).utc().toDate(),
-        routineTimeSpan,
+        timespan.startDate,
       );
     });
 
-    it('should return the routine if the user has not replied in more then 7 days', async () => {
+    it('should return the routine if the user has not replied within the routine timespan', async () => {
       // Arrange
-      const routineTimeSpan = 7;
       const daysOutdated = 5;
       routineSettingsServiceMock.routineSettings.mockResolvedValueOnce(
         routineSettingsMock,
@@ -196,9 +198,7 @@ describe('Pending Routines Controller', () => {
         answerMock,
       );
       cronServiceMock.daysOutdated.mockReturnValueOnce(daysOutdated);
-      routineServiceMock.getTimeSpanForAnwser.mockReturnValueOnce(
-        routineTimeSpan,
-      );
+      cronServiceMock.getTimespan.mockReturnValueOnce(timespan);
       answerGroupServiceMock.answeredWithinTimeSpan.mockReturnValueOnce(false);
 
       // Act

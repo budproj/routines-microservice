@@ -59,10 +59,10 @@ export class PendingRoutinesController {
     const answerUtc = dayjs(answerDate).utc();
     const answerUtcDate = answerUtc.toDate();
 
-    const timeSpanForAnwser = this.routine.getTimeSpanForAnwser();
+    const timeSpanForAnwser = this.cron.getTimespan(cronExpression);
     const answeredWithinTimeSpan = this.answerGroup.answeredWithinTimeSpan(
       answerUtcDate,
-      timeSpanForAnwser,
+      timeSpanForAnwser.startDate,
     );
 
     if (answeredWithinTimeSpan) {
