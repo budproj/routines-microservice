@@ -52,3 +52,15 @@ spec:
                 secretKeyRef:
                   name: routines-microservice
                   key: database-url
+
+        - name: routines-microservice-stable-add-missing-teams-configurations
+          image: 904333181156.dkr.ecr.sa-east-1.amazonaws.com/routines-microservice:$ECR_TAG
+          command: ['npm', 'run', 'global:settings']
+          env:
+            - name: NATS_CONNECTION_STRING
+              value: nats://nats.nats.svc.cluster.local:4222
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: routines-microservice
+                  key: database-url
