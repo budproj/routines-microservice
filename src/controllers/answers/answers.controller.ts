@@ -104,7 +104,25 @@ export class AnswersController {
       };
     });
 
-    return orderBy(formattedAnswerOverview, 'timestamp');
+    const answersSummaryWithComments = await Promise.all(
+      formattedAnswerOverview.map(async (answer) => {
+        if (answer.id) {
+          const commentCount = await this.nats.sendMessage(
+            'comment-count',
+            `routine:${answer.id}`,
+          );
+
+          return {
+            ...answer,
+            commentCount,
+          };
+        }
+
+        return answer;
+      }),
+    );
+
+    return orderBy(answersSummaryWithComments, 'timestamp');
   }
 
   @Get('/overview/:teamId')
