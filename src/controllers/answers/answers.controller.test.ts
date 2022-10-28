@@ -296,7 +296,7 @@ describe('Answers Controller', () => {
           id: '1',
           answers: [
             { value: 1, questionId: '1' },
-            { value: 3, questionId: '2' },
+            { value: 5, questionId: '2' },
             { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
@@ -316,7 +316,7 @@ describe('Answers Controller', () => {
           id: '1',
           answers: [
             { value: 1, questionId: '1' },
-            { value: 3, questionId: '2' },
+            { value: 2, questionId: '2' },
             { value: 'y', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
@@ -348,7 +348,7 @@ describe('Answers Controller', () => {
           ],
           productivity: [
             {
-              average: 3,
+              average: 3.3,
               timestamp: '2022-09-15T11:09:31.143Z',
             },
           ],

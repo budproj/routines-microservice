@@ -234,7 +234,7 @@ export class AnswersController {
 
         return {
           timestamp: answerGroupWithQuestionAnswers.timestamp,
-          average: mean,
+          average: Number(mean.toFixed(1)),
         };
       });
     });
