@@ -54,6 +54,7 @@ export class CronService {
 
     const isRunningDate = previousRunDate.diff(currentDate, 'days') === 0;
     if (isRunningDate) {
+      cronExpression.next();
       return 0;
     }
 
