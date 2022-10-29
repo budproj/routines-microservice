@@ -20,6 +20,10 @@ export const budRoutineEnForm: Array<FormQuestion> = [
     type: 'long_text',
     required: true,
     heading: 'What is the main reason for your answer?',
+    conditional: {
+      dependsOn: '44bd7498-e528-4f96-b45e-3a2374790373',
+      type: 'value_range',
+    },
     content: '',
   },
   {
