@@ -107,17 +107,20 @@ export class AnswersController {
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
         if (answer.id) {
-          const commentCount = await this.nats.sendMessage(
-            'comment-count',
-            `routine:${answer.id}`,
-          );
+          try {
+            const commentCount = await this.nats.sendMessage(
+              'comment-count',
+              `routine:${answer.id}`,
+            );
 
-          return {
-            ...answer,
-            commentCount,
-          };
+            return {
+              ...answer,
+              commentCount,
+            };
+          } catch (err) {
+            return answer;
+          }
         }
-
         return answer;
       }),
     );

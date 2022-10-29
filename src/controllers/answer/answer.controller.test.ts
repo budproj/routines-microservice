@@ -349,6 +349,7 @@ describe('Answer Controller', () => {
       const userAnswerDetailed = await AnswerController.getDetailedUserAnswer(
         answerGroupMock.id,
         userMock,
+        'en',
       );
 
       // Arrange

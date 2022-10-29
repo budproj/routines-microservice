@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as dayjs from 'dayjs';
 
@@ -76,6 +76,7 @@ export class AnswerController {
   async getDetailedUserAnswer(
     @Param('answerId') id: string,
     @User() user: UserType,
+    @Query('locale') locale: string,
   ) {
     const answerGroup = await this.answerGroupService.answerGroup({
       id: id,
@@ -147,7 +148,7 @@ export class AnswerController {
     });
 
     const routineForm = this.routineFormService.getRoutineForm(
-      RoutineFormLangs.PT_BR,
+      locale as RoutineFormLangs,
     );
 
     const userAnswers = routineForm.map((formQuestion) => {
