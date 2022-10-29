@@ -12,6 +12,7 @@ import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { FormService } from '../../services/form.service';
 import { MessagingService } from '../../services/messaging.service';
+import { RoutineFormLangs } from 'src/services/constants/form';
 
 beforeEach(jest.resetAllMocks);
 
@@ -349,7 +350,7 @@ describe('Answer Controller', () => {
       const userAnswerDetailed = await AnswerController.getDetailedUserAnswer(
         answerGroupMock.id,
         userMock,
-        'en',
+        'en' as RoutineFormLangs,
       );
 
       // Arrange

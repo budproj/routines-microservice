@@ -76,7 +76,7 @@ export class AnswerController {
   async getDetailedUserAnswer(
     @Param('answerId') id: string,
     @User() user: UserType,
-    @Query('locale') locale: string,
+    @Query('locale') locale: RoutineFormLangs,
   ) {
     const answerGroup = await this.answerGroupService.answerGroup({
       id: id,
@@ -147,9 +147,7 @@ export class AnswerController {
       },
     });
 
-    const routineForm = this.routineFormService.getRoutineForm(
-      locale as RoutineFormLangs,
-    );
+    const routineForm = this.routineFormService.getRoutineForm(locale);
 
     const userAnswers = routineForm.map((formQuestion) => {
       if (formQuestion.type !== 'reading_text') {
