@@ -64,14 +64,14 @@ export class SettingsController {
     const createdSettings = await this.routineSettings.upsertRoutineSettings(
       { companyId },
       settingsWithCompany,
-      {},
+      { cron: settings.cron },
     );
 
     const routineNotificationData = {
       ...createdSettings,
       queue: 'routine-notification',
     };
-    this.nats.emit('createSchedule', routineNotificationData);
+    this.nats.emit('updateSchedule', routineNotificationData);
 
     const daysToRoutineReminder = 3;
     const routineReminderCron = this.cron.addDaysToCron(
@@ -83,7 +83,7 @@ export class SettingsController {
       queue: 'routine-reminder-notification',
       cron: routineReminderCron,
     };
-    this.nats.emit('createSchedule', routineReminderNotificationData);
+    this.nats.emit('updateSchedule', routineReminderNotificationData);
 
     return createdSettings;
   }
