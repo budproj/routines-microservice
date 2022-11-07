@@ -21,6 +21,7 @@ describe('Answer Controller', () => {
     createAnswerGroup: jest.fn(),
     answerGroup: jest.fn(),
     answerGroups: jest.fn(),
+    deleteAnswerGroup: jest.fn(),
   };
 
   const answerServiceMock = {
@@ -88,6 +89,16 @@ describe('Answer Controller', () => {
     teams: [{ id: '968e8d90-c1dd-4d5c-948a-067e070ea269' }],
     picture: '',
     firstName: 'Morty',
+    lastName: 'Smith',
+    permissions: [],
+  };
+
+  const alternativeUserMock: User = {
+    id: '9ce87eda-64d1-4bfb-80a5-aa7811a04ea9',
+    companies: [{ id: routineSettingsMock.companyId }],
+    teams: [{ id: '968e8d90-c1dd-4d5c-948a-067e070ea269' }],
+    picture: '',
+    firstName: 'Jerry',
     lastName: 'Smith',
     permissions: [],
   };
@@ -755,6 +766,154 @@ describe('Answer Controller', () => {
       };
 
       expect(userAnswerDetailed).toEqual(expectedAnswersDetailed);
+    });
+  });
+  describe('deleteAnswer', () => {
+    it('should not be able delete a answer owned by another user', async () => {
+      answerGroupServiceMock.answerGroup.mockResolvedValueOnce(userMock.id);
+      const answers = [
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '44bd7498-e528-4f96-b45e-3a2374790373',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd81e7754-79be-4638-89f3-a74875772d00',
+          value: 'tava benzao',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: true,
+          questionId: 'f0c6e297-7eb7-4b48-869c-aec96240ba2b',
+          value: 'muita coisa pra fazer',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '95b84e67-d5b6-4fcf-938a-b4c9897596cb',
+          value: 'tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'a1d5b993-9430-40bb-8f0f-47cda69720b9',
+          value: 'outras tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
+          value: 'n',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
+          value: 'uns bagulhos ai',
+        },
+      ];
+      await AnswerController.registerAnswers(userMock, answers);
+
+      await expect(
+        AnswerController.deleteAnswer(
+          '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          alternativeUserMock,
+        ),
+      ).rejects.toBeInstanceOf(Error);
+    });
+
+    it('should not be able delete a answer that not exists', async () => {
+      await expect(
+        AnswerController.deleteAnswer('non-existing-answer', userMock),
+      ).rejects.toBeInstanceOf(Error);
+    });
+    it('should be able delete an answer if i am the owner', async () => {
+      answerGroupServiceMock.answerGroup.mockResolvedValueOnce(answerGroupMock);
+      const deleteAnswerGroupSpy = jest.spyOn(
+        answerGroupServiceMock,
+        'deleteAnswerGroup',
+      );
+
+      const answers = [
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '44bd7498-e528-4f96-b45e-3a2374790373',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd81e7754-79be-4638-89f3-a74875772d00',
+          value: 'tava benzao',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '9a56911a-61c1-49af-87a8-7a35a1804f6b',
+          value: '2',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: true,
+          questionId: 'f0c6e297-7eb7-4b48-869c-aec96240ba2b',
+          value: 'muita coisa pra fazer',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: '95b84e67-d5b6-4fcf-938a-b4c9897596cb',
+          value: 'tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'a1d5b993-9430-40bb-8f0f-47cda69720b9',
+          value: 'outras tarefinhas brabas',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'cf785f20-5a0b-4c4c-b882-9e3949589df2',
+          value: 'n',
+        },
+        {
+          id: randomUUID(),
+          answerGroupId: '37d76b2b-f8a7-4d79-afc4-c8b13838fbcc',
+          hidden: false,
+          questionId: 'd9ca02f3-7bf7-40f3-b393-618de3410751',
+          value: 'uns bagulhos ai',
+        },
+      ];
+      await AnswerController.registerAnswers(userMock, answers);
+      await AnswerController.deleteAnswer(answerGroupMock.id, userMock);
+
+      expect(deleteAnswerGroupSpy).toBeCalledTimes(1);
+      expect(deleteAnswerGroupSpy).toBeCalledWith({ id: answerGroupMock.id });
     });
   });
 });

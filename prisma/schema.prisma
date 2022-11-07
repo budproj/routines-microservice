@@ -32,7 +32,7 @@ model AnswerGroup {
 model Answer {
   id    String         @db.Uuid    @id   @default(uuid())
   questionId String    @db.Uuid
-  answerGroup   AnswerGroup @relation(fields: [answerGroupId], references: [id])
+  answerGroup   AnswerGroup @relation(fields: [answerGroupId], references: [id], onDelete: Cascade)
   answerGroupId String @db.Uuid
   value String
 }
