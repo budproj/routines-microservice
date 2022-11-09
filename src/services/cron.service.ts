@@ -66,10 +66,10 @@ export class CronService {
   }
 
   getTimespan(cronExpression: cronParser.CronExpression): Timespan {
-    const startDate = dayjs(cronExpression.prev().toDate())
+    const startDate = dayjs(cronExpression.prev().toDate(), { utc: true })
       .startOf('day')
       .toDate();
-    const finishDate = dayjs(cronExpression.next().toDate())
+    const finishDate = dayjs(cronExpression.next().toDate(), { utc: true })
       .subtract(1, 'day')
       .startOf('day')
       .toDate();
