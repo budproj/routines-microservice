@@ -67,9 +67,11 @@ export class CronService {
 
   getTimespan(cronExpression: cronParser.CronExpression): Timespan {
     const startDate = dayjs(cronExpression.prev().toDate())
+      .utc()
       .startOf('day')
       .toDate();
     const finishDate = dayjs(cronExpression.next().toDate())
+      .utc()
       .subtract(1, 'day')
       .startOf('day')
       .toDate();

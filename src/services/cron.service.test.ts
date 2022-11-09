@@ -125,8 +125,8 @@ describe('Cron Service', () => {
 
       // assert
       expect(timespan).toEqual({
-        startDate: dayjs('2022-09-30').utc().toDate(),
-        finishDate: dayjs('2022-10-06').utc().toDate(),
+        startDate: dayjs('2022-09-30', { utc: true }).toDate(),
+        finishDate: dayjs('2022-10-06', { utc: true }).toDate(),
       });
     });
   });
@@ -158,16 +158,16 @@ describe('Cron Service', () => {
       expect(timespans).toEqual(
         expect.arrayContaining([
           {
-            startDate: dayjs('2022-09-09').utc().toDate(),
-            finishDate: dayjs('2022-09-15').utc().toDate(),
+            startDate: dayjs('2022-09-09', { utc: true }).toDate(),
+            finishDate: dayjs('2022-09-15', { utc: true }).toDate(),
           },
           {
-            startDate: dayjs('2022-09-16').utc().toDate(),
-            finishDate: dayjs('2022-09-22').utc().toDate(),
+            startDate: dayjs('2022-09-16', { utc: true }).toDate(),
+            finishDate: dayjs('2022-09-22', { utc: true }).toDate(),
           },
           {
-            startDate: dayjs('2022-09-23').utc().toDate(),
-            finishDate: dayjs('2022-09-29').utc().toDate(),
+            startDate: dayjs('2022-09-23', { utc: true }).toDate(),
+            finishDate: dayjs('2022-09-29', { utc: true }).toDate(),
           },
         ]),
       );
