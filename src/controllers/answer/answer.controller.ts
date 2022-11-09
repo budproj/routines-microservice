@@ -197,7 +197,7 @@ export class AnswerController {
             .map((answer) => ({
               ...answer,
               timestamp: this.cronService.getStartDayOfRoutine(
-                answer.timestamp,
+                dayjs(answerGroup.timestamp, { utc: true }).toDate(),
                 settings.cron,
               ),
             }))
@@ -209,7 +209,7 @@ export class AnswerController {
               id: currentAnswerFromThisQuestion.id,
               value: currentAnswerFromThisQuestion?.value,
               timestamp: this.cronService.getStartDayOfRoutine(
-                answerGroup.timestamp,
+                dayjs(answerGroup.timestamp, { utc: true }).toDate(),
                 settings.cron,
               ),
             },
@@ -244,6 +244,9 @@ export class AnswerController {
         };
       }
     });
+
+    consoles['answerGroup'] = answerGroup;
+    consoles['settings'] = settings;
 
     const validAnswers = userAnswers.filter((answer) => answer);
     const userThatAnswered = await this.messaging.sendMessage<
