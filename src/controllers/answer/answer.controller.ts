@@ -157,6 +157,8 @@ export class AnswerController {
 
     const routineForm = this.routineFormService.getRoutineForm(locale);
 
+    const consoles = {};
+
     const userAnswers = routineForm.map((formQuestion) => {
       if (formQuestion.type !== 'reading_text') {
         const currentAnswerFromThisQuestion = currentAnswer.find(
@@ -213,10 +215,14 @@ export class AnswerController {
             },
           ];
 
-          const roadBlockHistory = historyTimespans.map((timespan) => {
+          const roadBlockHistory = historyTimespans.map((timespan, index) => {
             const answeredRoadblock = values.find(({ timestamp }) => {
+              consoles['timestamp'] = timestamp;
+
               return dayjs(timespan.startDate).isSame(timestamp);
             });
+
+            consoles[index] = [timespan, answeredRoadblock ?? 'not-match'];
 
             return {
               id: null,
@@ -249,6 +255,7 @@ export class AnswerController {
       user: userThatAnswered,
       history: history,
       answers: validAnswers,
+      consoles,
     };
 
     return answerDetails;
