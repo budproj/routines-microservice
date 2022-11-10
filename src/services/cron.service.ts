@@ -92,8 +92,6 @@ export class CronService {
       multipleTimespans.push(timespan);
     }
 
-    console.log({ multipleTimespans });
-
     return multipleTimespans;
   }
 
