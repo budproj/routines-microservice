@@ -41,7 +41,7 @@ export class SettingsController {
     );
 
     const createPromises = companies.map((company) => {
-      return this.createSettings(user, company.id, settings);
+      return this.createSettings(user, { companyId: company.id }, settings);
     });
 
     await Promise.all(createPromises);
@@ -50,7 +50,7 @@ export class SettingsController {
   @Post('/:companyId')
   async createSettings(
     @User() user: UserType,
-    @Param() companyId: string,
+    @Param() { companyId }: { companyId: string },
     @Body() settings: SettingsWithoutCompany,
   ): Promise<RoutineSettings> {
     this.security.userHasPermission(user.permissions, 'routines:create:team');

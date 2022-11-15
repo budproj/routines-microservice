@@ -77,7 +77,8 @@ describe('Settings Controller', () => {
       );
 
       // Act
-      await controller.createSettings(userMock, company.id, settings);
+      const params = { companyId: company.id };
+      await controller.createSettings(userMock, params, settings);
 
       // Assert
       expect(routineSettingsServiceMock.upsertRoutineSettings).toBeCalledTimes(
@@ -104,7 +105,8 @@ describe('Settings Controller', () => {
       );
 
       // Act
-      await controller.createSettings(userMock, company.id, settings);
+      const params = { companyId: company.id };
+      await controller.createSettings(userMock, params, settings);
 
       // Assert
       expect(emitMock).toBeCalledTimes(2);
@@ -126,9 +128,10 @@ describe('Settings Controller', () => {
       );
 
       // Act
+      const params = { companyId: company.id };
       const savedRoutine = await controller.createSettings(
         userMock,
-        company.id,
+        params,
         settings,
       );
 
