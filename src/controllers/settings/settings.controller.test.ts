@@ -178,10 +178,14 @@ describe('Settings Controller', () => {
       await controller.globalRoutineSettingsCreation(userMock, settings);
 
       expect(createSettingsMock).toBeCalledTimes(2);
-      expect(createSettingsMock).toBeCalledWith(userMock, company.id, settings);
       expect(createSettingsMock).toBeCalledWith(
         userMock,
-        otherCompany.id,
+        { companyId: company.id },
+        settings,
+      );
+      expect(createSettingsMock).toBeCalledWith(
+        userMock,
+        { companyId: otherCompany.id },
         settings,
       );
     });
