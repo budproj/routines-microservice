@@ -90,7 +90,7 @@ describe('Settings Controller', () => {
           ...settings,
           companyId: company.id,
         },
-        {},
+        { cron: settings.cron },
       );
     });
 
@@ -110,11 +110,11 @@ describe('Settings Controller', () => {
 
       // Assert
       expect(emitMock).toBeCalledTimes(2);
-      expect(emitMock).toBeCalledWith('createSchedule', {
+      expect(emitMock).toBeCalledWith('updateSchedule', {
         ...createdSettings,
         queue: 'routine-notification',
       });
-      expect(emitMock).toBeCalledWith('createSchedule', {
+      expect(emitMock).toHaveBeenLastCalledWith('updateSchedule', {
         ...createdSettings,
         queue: 'routine-reminder-notification',
         cron: '0 0 * * 2',
