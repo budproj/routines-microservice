@@ -72,11 +72,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "jest": {
-    "globals": {
-      "ts-jest": {
-        "compiler": "ttypescript"
-      }
-    },
     "moduleFileExtensions": [
       "js",
       "json",
@@ -85,7 +80,9 @@
     "rootDir": "src",
     "testRegex": ".test\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": ["ts-jest", {
+          "compiler": "ttypescript"
+      }]
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
