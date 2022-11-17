@@ -38,7 +38,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.1.5",
     "lodash": "^4.17.21",
-    "nats": "^2.8.0",
+    "nats": "^2.9.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.5.7"
