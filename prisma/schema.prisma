@@ -18,7 +18,7 @@ model RoutineSettings {
   id    String       @db.Uuid   @id   @default(uuid())
   companyId String   @db.Uuid   @unique
   disabledTeams String[]
-  cron String
+  cron String @default("0 6 * * 5")
 }
 
 model AnswerGroup {
