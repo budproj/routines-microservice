@@ -30,7 +30,7 @@
     "@nestjs/common": "^9.1.6",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.2.0",
-    "@nestjs/microservices": "^9.1.6",
+    "@nestjs/microservices": "^9.2.0",
     "@nestjs/platform-express": "^9.2.0",
     "@prisma/client": "^4.5.0",
     "cron-parser": "^4.6.0",
