@@ -310,7 +310,7 @@ describe('Answers Controller', () => {
             { value: 'n', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
-          userId: userMock.id,
+          userId: 'f4aa9450-6b6c-11ed-a1eb-0242ac120002',
         },
         {
           id: '1',
@@ -320,7 +320,7 @@ describe('Answers Controller', () => {
             { value: 'y', questionId: '3' },
           ],
           timestamp: '2022-09-15T11:09:31.143Z',
-          userId: userMock.id,
+          userId: 'fc1d840e-6b6c-11ed-a1eb-0242ac120002',
         },
       ];
       answerGroupServiceMock.answerGroups.mockResolvedValueOnce(

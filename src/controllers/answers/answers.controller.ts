@@ -203,7 +203,11 @@ export class AnswersController {
       };
     }
 
+    console.log({ answerGroups });
+
     const uniqueAnswerGroups = uniqBy(answerGroups, 'userId');
+
+    console.log({ uniqueAnswerGroups });
 
     const answerGroupsWithTimestamp = uniqueAnswerGroups.map((answerGroup) => {
       return this.answerGroupService.parseAnswerTimestamp(
@@ -211,6 +215,8 @@ export class AnswersController {
         routine.cron,
       );
     });
+
+    console.log({ answerGroupsWithTimestamp });
 
     const groupedAnswerGroupsByTimestamp = Object.values<
       AnswerGroupWithAnswers[]
