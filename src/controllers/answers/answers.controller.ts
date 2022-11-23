@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
-import { groupBy, meanBy, orderBy } from 'lodash';
+import { groupBy, meanBy, orderBy, uniqBy } from 'lodash';
 
 import { User } from '../../decorators/user.decorator';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -203,12 +203,20 @@ export class AnswersController {
       };
     }
 
-    const answerGroupsWithTimestamp = answerGroups.map((answerGroup) => {
+    console.log({ answerGroups });
+
+    const uniqueAnswerGroups = uniqBy(answerGroups, 'userId');
+
+    console.log({ uniqueAnswerGroups });
+
+    const answerGroupsWithTimestamp = uniqueAnswerGroups.map((answerGroup) => {
       return this.answerGroupService.parseAnswerTimestamp(
         answerGroup,
         routine.cron,
       );
     });
+
+    console.log({ answerGroupsWithTimestamp });
 
     const groupedAnswerGroupsByTimestamp = Object.values<
       AnswerGroupWithAnswers[]
