@@ -10,9 +10,7 @@ export class SecurityService {
     teamId: Team['id'],
     rolesToCheck?: string,
   ) {
-    const isUserFromTeam = user.companies.some(
-      (company) => company.id === teamId,
-    );
+    const isUserFromTeam = user.teams.some((company) => company.id === teamId);
 
     const hasAdminRole = rolesToCheck
       ? this.userHasPermission(user.permissions, rolesToCheck, false)
