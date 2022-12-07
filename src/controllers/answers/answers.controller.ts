@@ -423,6 +423,7 @@ export class AnswersController {
       roadBlock: roadBlock.value,
       productivity: productivity.value,
       feeling: feeling.value,
+      lastRoutineAnswerId: answerGroups[0].id,
     };
   }
 }
