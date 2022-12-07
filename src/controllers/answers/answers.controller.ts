@@ -333,8 +333,6 @@ export class AnswersController {
 
     answerGroups.forEach((answerGroup) => {
       answerGroup.answers.forEach((answer) => {
-        console.log(answer.value);
-
         if (answer.questionId === questionsId[0] && Number(answer.value) <= 2) {
           discouraged.push(answerGroup.userId);
         }
@@ -364,5 +362,67 @@ export class AnswersController {
         usersIds: roadBlock,
       },
     ];
+  }
+
+  @Get('/overview/user/:userId')
+  async getUserLastMetrics(
+    @User() user: UserType,
+    @Param('teamId') userId: string,
+  ) {
+    // this.securityService.isUserFromCompany(user, teamId);
+    // this.securityService.isUserFromTeam(user, teamId);
+
+    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
+      'core-ports.get-team-company',
+      { id: user.companies[0].id },
+    );
+
+    const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
+    const questions = form.filter(
+      (question) =>
+        question.type === 'emoji_scale' ||
+        question.type === 'value_range' ||
+        question.type === 'road_block',
+    );
+    const questionsId = questions.map((question) => question.id);
+
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+    const parsedCron = this.cronService.parse(routine.cron);
+    const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
+
+    const answerGroups = await this.answerGroupService.answerGroups({
+      where: {
+        userId,
+        timestamp: {
+          lte: finishDate,
+          gte: startDate,
+        },
+      },
+      include: {
+        answers: {
+          where: {
+            questionId: { in: questionsId },
+          },
+        },
+      },
+    });
+
+    const feeling = answerGroups[0].answers.find(
+      (answer) => answer.questionId === questionsId[0],
+    );
+    const productivity = answerGroups[0].answers.find(
+      (answer) => answer.questionId === questionsId[1],
+    );
+    const roadBlock = answerGroups[0].answers.find(
+      (answer) => answer.questionId === questionsId[2],
+    );
+
+    return {
+      roadBlock: roadBlock.value,
+      productivity: productivity.value,
+      feeling: feeling.value,
+    };
   }
 }
