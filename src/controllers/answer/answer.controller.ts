@@ -1,5 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { Answer, Prisma } from '@prisma/client';
 import * as dayjs from 'dayjs';
 
 import { User } from '../../decorators/user.decorator';
@@ -173,7 +181,6 @@ export class AnswerController {
           formQuestion.type === 'value_range' ||
           formQuestion.type === 'road_block'
         ) {
-          // console.log({ previousAnswerGroups, previousAnswers });
           const previousAnswersFromThisQuestion = previousAnswers
             .filter((answer) => answer.questionId === formQuestion.id)
             .map(({ id, value, answerGroupId }) => {
@@ -206,7 +213,7 @@ export class AnswerController {
             },
           ];
 
-          const roadBlockHistory = historyTimespans.map((timespan) => {
+          const roadBlockHistory = historyTimespans.map((timespan, index) => {
             const answeredRoadblock = values.find(({ timestamp }) => {
               return dayjs(timespan.startDate).isSame(timestamp);
             });
@@ -245,5 +252,23 @@ export class AnswerController {
     };
 
     return answerDetails;
+  }
+
+  @Delete('/:answerId')
+  async deleteAnswer(
+    @Param('answerId') id: Answer['id'],
+    @User() user: UserType,
+  ): Promise<void> {
+    const answer = await this.answerGroupService.answerGroup({ id });
+
+    if (!answer) {
+      throw new Error('It is not possible to delete a non-existent answer.');
+    }
+
+    if (answer.userId !== user.id) {
+      throw new Error('Only the owner of the answer can delete it');
+    }
+
+    await this.answerGroupService.deleteAnswerGroup({ id });
   }
 }

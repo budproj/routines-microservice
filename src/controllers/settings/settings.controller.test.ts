@@ -77,7 +77,8 @@ describe('Settings Controller', () => {
       );
 
       // Act
-      await controller.createSettings(userMock, company.id, settings);
+      const params = { companyId: company.id };
+      await controller.createSettings(userMock, params, settings);
 
       // Assert
       expect(routineSettingsServiceMock.upsertRoutineSettings).toBeCalledTimes(
@@ -89,7 +90,7 @@ describe('Settings Controller', () => {
           ...settings,
           companyId: company.id,
         },
-        {},
+        { cron: settings.cron },
       );
     });
 
@@ -104,15 +105,16 @@ describe('Settings Controller', () => {
       );
 
       // Act
-      await controller.createSettings(userMock, company.id, settings);
+      const params = { companyId: company.id };
+      await controller.createSettings(userMock, params, settings);
 
       // Assert
       expect(emitMock).toBeCalledTimes(2);
-      expect(emitMock).toBeCalledWith('createSchedule', {
+      expect(emitMock).toBeCalledWith('updateSchedule', {
         ...createdSettings,
         queue: 'routine-notification',
       });
-      expect(emitMock).toBeCalledWith('createSchedule', {
+      expect(emitMock).toHaveBeenLastCalledWith('updateSchedule', {
         ...createdSettings,
         queue: 'routine-reminder-notification',
         cron: '0 0 * * 2',
@@ -126,9 +128,10 @@ describe('Settings Controller', () => {
       );
 
       // Act
+      const params = { companyId: company.id };
       const savedRoutine = await controller.createSettings(
         userMock,
-        company.id,
+        params,
         settings,
       );
 
@@ -175,10 +178,14 @@ describe('Settings Controller', () => {
       await controller.globalRoutineSettingsCreation(userMock, settings);
 
       expect(createSettingsMock).toBeCalledTimes(2);
-      expect(createSettingsMock).toBeCalledWith(userMock, company.id, settings);
       expect(createSettingsMock).toBeCalledWith(
         userMock,
-        otherCompany.id,
+        { companyId: company.id },
+        settings,
+      );
+      expect(createSettingsMock).toBeCalledWith(
+        userMock,
+        { companyId: otherCompany.id },
         settings,
       );
     });
