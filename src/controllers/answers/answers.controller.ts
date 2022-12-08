@@ -372,7 +372,6 @@ export class AnswersController {
   async getUserLastMetrics(
     @User() user: UserType,
     @Param('teamId') userId: string,
-    @Res() res: Response,
   ) {
     // this.securityService.isUserFromCompany(user, teamId);
     // this.securityService.isUserFromTeam(user, teamId);
@@ -413,12 +412,6 @@ export class AnswersController {
         },
       },
     });
-
-    if (answerGroups.length < 1) {
-      return res
-        .status(HttpStatus.NOT_FOUND)
-        .json({ message: 'No routine answer found for user.' });
-    }
 
     const feeling = answerGroups[0].answers.find(
       (answer) => answer.questionId === questionsId[0],
