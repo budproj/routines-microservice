@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { groupBy, meanBy, orderBy } from 'lodash';
 
@@ -15,6 +15,7 @@ import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
+import { Response } from 'express';
 
 interface FindAnswersQuery {
   before?: string;
@@ -368,6 +369,7 @@ export class AnswersController {
   async getUserLastMetrics(
     @User() user: UserType,
     @Param('teamId') userId: string,
+    @Res() res: Response,
   ) {
     // this.securityService.isUserFromCompany(user, teamId);
     // this.securityService.isUserFromTeam(user, teamId);
@@ -408,6 +410,12 @@ export class AnswersController {
         },
       },
     });
+
+    if (answerGroups.length < 1) {
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ message: 'No routine answer found for user.' });
+    }
 
     const feeling = answerGroups[0].answers.find(
       (answer) => answer.questionId === questionsId[0],
