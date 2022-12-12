@@ -371,7 +371,7 @@ export class AnswersController {
   @Get('/overview/user/:userId')
   async getUserLastMetrics(
     @User() user: UserType,
-    @Param('teamId') userId: string,
+    @Param('userId') userId: string,
   ) {
     // this.securityService.isUserFromCompany(user, teamId);
     // this.securityService.isUserFromTeam(user, teamId);
@@ -393,6 +393,7 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
@@ -412,6 +413,10 @@ export class AnswersController {
         },
       },
     });
+
+    if (answerGroups.length < 1) {
+      return;
+    }
 
     const feeling = answerGroups[0].answers.find(
       (answer) => answer.questionId === questionsId[0],
