@@ -376,6 +376,8 @@ export class AnswersController {
     // this.securityService.isUserFromCompany(user, teamId);
     // this.securityService.isUserFromTeam(user, teamId);
 
+    const console = {};
+
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',
       { id: user.companies[0].id },
@@ -393,8 +395,13 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
+    console['routine'] = routine;
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
+    console['finishDate'] = finishDate;
+    console['startDate'] = startDate;
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -413,6 +420,8 @@ export class AnswersController {
       },
     });
 
+    console['answerGroups'] = answerGroups;
+
     const feeling = answerGroups[0].answers.find(
       (answer) => answer.questionId === questionsId[0],
     );
@@ -423,11 +432,16 @@ export class AnswersController {
       (answer) => answer.questionId === questionsId[2],
     );
 
+    console['productivity'] = productivity;
+    console['feeling'] = feeling;
+    console['roadBlock'] = roadBlock;
+
     return {
       roadBlock: roadBlock.value,
       productivity: productivity.value,
       feeling: feeling.value,
       lastRoutineAnswerId: answerGroups[0].id,
+      console,
     };
   }
 }
