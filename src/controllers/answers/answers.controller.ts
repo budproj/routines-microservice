@@ -414,6 +414,10 @@ export class AnswersController {
       },
     });
 
+    if (answerGroups.length < 1) {
+      return;
+    }
+
     const feeling = answerGroups[0].answers.find(
       (answer) => answer.questionId === questionsId[0],
     );
