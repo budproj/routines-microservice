@@ -8,6 +8,7 @@ import { FormService } from '../../services/form.service';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
+import { CronService } from '../../services/cron.service';
 
 beforeEach(jest.resetAllMocks);
 
@@ -62,6 +63,7 @@ describe('Answers Controller', () => {
       MessagingService,
       SecurityService,
       RoutineSettingsService,
+      CronService,
     ],
   })
     .overrideProvider(AnswerGroupService)
