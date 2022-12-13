@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { groupBy, meanBy, orderBy, uniqBy } from 'lodash';
 
@@ -8,14 +8,12 @@ import { FormService } from '../../services/form.service';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
-import { CronService } from '../../services/cron.service';
 
 import { AnswerGroupWithAnswers } from '../../types/AnswerGroupWithAnswers';
 import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
-import { Response } from 'express';
 
 interface FindAnswersQuery {
   before?: string;
@@ -44,7 +42,6 @@ export class AnswersController {
     private formService: FormService,
     private securityService: SecurityService,
     private routineSettingsService: RoutineSettingsService,
-    private cronService: CronService,
   ) {}
 
   @Get('/summary/:teamId?')
@@ -274,163 +271,6 @@ export class AnswersController {
         productivity,
         roadblock,
       },
-    };
-  }
-
-  @Get('/flags/:teamId')
-  async getRoutineFlagsFromTeam(
-    @User() user: UserType,
-    @Param('teamId') teamId: string,
-  ) {
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
-      { id: teamId ?? user.companies[0].id },
-    );
-
-    this.securityService.isUserFromCompany(user, company.id);
-
-    const usersFromTeam = await this.nats.sendMessage<
-      MessagingQuery,
-      UserType[]
-    >('core-ports.get-users-from-team', {
-      teamID: teamId ?? user.companies[0].id,
-      filters: { resolveTree: true },
-    });
-    const usersFromTeamIds = usersFromTeam.map((user) => user.id);
-
-    const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
-    const questions = form.filter(
-      (question) =>
-        question.type === 'emoji_scale' ||
-        question.type === 'value_range' ||
-        question.type === 'road_block',
-    );
-    const questionsId = questions.map((question) => question.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-    const parsedCron = this.cronService.parse(routine.cron);
-    const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
-
-    const answerGroups = await this.answerGroupService.answerGroups({
-      where: {
-        userId: { in: usersFromTeamIds },
-        timestamp: {
-          lte: finishDate,
-          gte: startDate,
-        },
-      },
-      include: {
-        answers: {
-          where: {
-            questionId: { in: questionsId },
-          },
-        },
-      },
-    });
-
-    const discouraged = [];
-    const lowProductivity = [];
-    const roadBlock = [];
-
-    answerGroups.forEach((answerGroup) => {
-      answerGroup.answers.forEach((answer) => {
-        if (answer.questionId === questionsId[0] && Number(answer.value) <= 2) {
-          discouraged.push(answerGroup.userId);
-        }
-        if (answer.questionId === questionsId[1] && Number(answer.value) <= 3) {
-          lowProductivity.push(answerGroup.userId);
-        }
-        if (answer.questionId === questionsId[2] && answer.value === 'y') {
-          roadBlock.push(answerGroup.userId);
-        }
-      });
-    });
-
-    return [
-      {
-        type: 'feeling',
-        quantity: discouraged.length,
-        usersIds: discouraged,
-      },
-      {
-        type: 'productivity',
-        quantity: lowProductivity.length,
-        usersIds: lowProductivity,
-      },
-      {
-        type: 'roadblock',
-        quantity: roadBlock.length,
-        usersIds: roadBlock,
-      },
-    ];
-  }
-
-  @Get('/overview/user/:userId')
-  async getUserLastMetrics(
-    @User() user: UserType,
-    @Param('userId') userId: string,
-  ) {
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
-      { id: user.companies[0].id },
-    );
-
-    this.securityService.isUserFromCompany(user, company.id);
-
-    const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
-    const questions = form.filter(
-      (question) =>
-        question.type === 'emoji_scale' ||
-        question.type === 'value_range' ||
-        question.type === 'road_block',
-    );
-    const questionsId = questions.map((question) => question.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    const parsedCron = this.cronService.parse(routine.cron);
-    const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
-
-    const answerGroups = await this.answerGroupService.answerGroups({
-      where: {
-        userId,
-        timestamp: {
-          lte: finishDate,
-          gte: startDate,
-        },
-      },
-      include: {
-        answers: {
-          where: {
-            questionId: { in: questionsId },
-          },
-        },
-      },
-    });
-
-    if (answerGroups.length < 1) {
-      return;
-    }
-
-    const feeling = answerGroups[0].answers.find(
-      (answer) => answer.questionId === questionsId[0],
-    );
-    const productivity = answerGroups[0].answers.find(
-      (answer) => answer.questionId === questionsId[1],
-    );
-    const roadBlock = answerGroups[0].answers.find(
-      (answer) => answer.questionId === questionsId[2],
-    );
-
-    return {
-      roadBlock: roadBlock.value,
-      productivity: productivity.value,
-      feeling: feeling.value,
-      lastRoutineAnswerId: answerGroups[0].id,
     };
   }
 }
