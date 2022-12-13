@@ -282,13 +282,12 @@ export class AnswersController {
     @User() user: UserType,
     @Param('teamId') teamId: string,
   ) {
-    // this.securityService.isUserFromCompany(user, teamId);
-    // this.securityService.isUserFromTeam(user, teamId);
-
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',
       { id: teamId ?? user.companies[0].id },
     );
+
+    this.securityService.isUserFromCompany(user, company.id);
 
     const usersFromTeam = await this.nats.sendMessage<
       MessagingQuery,
@@ -373,13 +372,12 @@ export class AnswersController {
     @User() user: UserType,
     @Param('userId') userId: string,
   ) {
-    // this.securityService.isUserFromCompany(user, teamId);
-    // this.securityService.isUserFromTeam(user, teamId);
-
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',
       { id: user.companies[0].id },
     );
+
+    this.securityService.isUserFromCompany(user, company.id);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
