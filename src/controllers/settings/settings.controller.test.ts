@@ -51,7 +51,7 @@ describe('Settings Controller', () => {
 
   const settings = {
     disabledTeams: [],
-    cron: '0 0 * * 5',
+    cron: '0 6 * * 5',
   };
 
   const userMock: User = {
@@ -117,7 +117,7 @@ describe('Settings Controller', () => {
       expect(emitMock).toHaveBeenLastCalledWith('updateSchedule', {
         ...createdSettings,
         queue: 'routine-reminder-notification',
-        cron: '0 0 * * 2',
+        cron: '0 6 * * 1',
       });
     });
 
@@ -255,7 +255,7 @@ describe('Settings Controller', () => {
       expect(emitMock).toBeCalledWith('updateSchedule', {
         ...settings,
         queue: 'routine-reminder-notification',
-        cron: '0 0 * * 2',
+        cron: '0 6 * * 1',
       });
     });
 
