@@ -73,11 +73,8 @@ export class SettingsController {
     };
     this.nats.emit('updateSchedule', routineNotificationData);
 
-    const daysToRoutineReminder = 3;
-    const routineReminderCron = this.cron.addDaysToCron(
-      createdSettings.cron,
-      daysToRoutineReminder,
-    );
+    const routineReminderCron = '0 6 * * 1';
+
     const routineReminderNotificationData = {
       ...createdSettings,
       queue: 'routine-reminder-notification',
@@ -112,11 +109,8 @@ export class SettingsController {
     };
     this.nats.emit('updateSchedule', routineNotificationData);
 
-    const daysToRoutineReminder = 3;
-    const routineReminderCron = this.cron.addDaysToCron(
-      updatedSettings.cron,
-      daysToRoutineReminder,
-    );
+    const routineReminderCron = '0 6 * * 1';
+
     const routineReminderNotificationData = {
       ...updatedSettings,
       queue: 'routine-reminder-notification',
