@@ -8,6 +8,7 @@ import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
 
 import { NatsController } from './nats.controller';
+import { FormService } from '../../services/form.service';
 
 describe('NATS Controller', () => {
   let natsController: NatsController;
@@ -87,6 +88,7 @@ describe('NATS Controller', () => {
         MessagingService,
         RoutineSettingsService,
         CronService,
+        FormService,
       ],
     })
       .overrideProvider(HealthCheckDBService)
