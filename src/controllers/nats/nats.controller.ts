@@ -3,10 +3,13 @@ import { randomUUID } from 'crypto';
 
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
-import { User } from 'src/types/User';
+import { User as UserType } from 'src/types/User';
 import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
+import { CronService } from 'src/services/cron.service';
+import { FormService } from 'src/services/form.service';
+import { RoutineFormLangs } from 'src/services/constants/form';
 
 interface RoutineData {
   id: string;
@@ -14,13 +17,15 @@ interface RoutineData {
   disabledTeams: string[];
 }
 
-@Controller()
+@Controller('/')
 export class NatsController {
   constructor(
     private healthCheckDB: HealthCheckDBService,
     private nats: MessagingService,
     private routineSettings: RoutineSettingsService,
+    private cronService: CronService,
     private answerGroupService: AnswerGroupService,
+    private formService: FormService,
   ) {}
 
   private readonly logger = new Logger(NatsController.name);
@@ -32,11 +37,47 @@ export class NatsController {
     await this.nats.emit(data.reply, true);
   }
 
+  @MessagePattern('user-last-routine', Transport.NATS)
+  async userLastRoutine(@Payload() data: { user: UserType }) {
+    const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
+    const questions = form.filter(
+      (question) =>
+        question.type === 'emoji_scale' ||
+        question.type === 'value_range' ||
+        question.type === 'road_block',
+    );
+    const questionsId = questions.map((question) => question.id);
+    const routine = await this.routineSettings.routineSettings({
+      companyId: data.user.companies[0].id,
+    });
+    const parsedCron = this.cronService.parse(routine.cron);
+    const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
+
+    const answerGroups = await this.answerGroupService.answerGroups({
+      where: {
+        userId: data.user.id,
+        timestamp: {
+          lte: finishDate,
+          gte: startDate,
+        },
+      },
+      include: {
+        answers: {
+          where: {
+            questionId: { in: questionsId },
+          },
+        },
+      },
+    });
+
+    return answerGroups;
+  }
+
   @MessagePattern('routine-notification', Transport.NATS)
   async routineNotification(@Payload() routineData: RoutineData) {
     this.logger.log('New routine notification message with data:', routineData);
 
-    const companyUsers = await this.nats.sendMessage<any, User[]>(
+    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
       'core-ports.get-users-from-team',
       {
         teamID: routineData.companyId,
@@ -91,7 +132,7 @@ export class NatsController {
       routineData,
     );
 
-    const companyUsers = await this.nats.sendMessage<any, User[]>(
+    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
       'core-ports.get-users-from-team',
       {
         teamID: routineData.companyId,
