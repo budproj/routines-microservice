@@ -7,8 +7,8 @@ import { User as UserType } from 'src/types/User';
 import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
-import { CronService } from 'src/services/cron.service';
-import { FormService } from 'src/services/form.service';
+import { CronService } from '../../services/cron.service';
+import { FormService } from '../../services/form.service';
 import { RoutineFormLangs } from 'src/services/constants/form';
 
 interface RoutineData {
