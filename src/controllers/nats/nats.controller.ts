@@ -9,7 +9,7 @@ import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
 import { FormService } from '../../services/form.service';
-import { RoutineFormLangs } from 'src/services/constants/form';
+import { RoutineFormLangs } from '../../services/constants/form';
 
 interface RoutineData {
   id: string;
