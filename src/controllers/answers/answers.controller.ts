@@ -310,6 +310,7 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
@@ -329,6 +330,10 @@ export class AnswersController {
         },
       },
     });
+
+    if (!routine || !answerGroups) {
+      return [];
+    }
 
     const discouraged = [];
     const lowProductivity = [];
