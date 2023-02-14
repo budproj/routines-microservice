@@ -335,6 +335,10 @@ export class AnswersController {
       },
     });
 
+    if (!routine || !answerGroups) {
+      return [];
+    }
+
     const discouraged = [];
     const lowProductivity = [];
     const roadBlock = [];
