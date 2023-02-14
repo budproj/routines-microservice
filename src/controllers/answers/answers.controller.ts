@@ -310,6 +310,11 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
+    if (!routine) {
+      return;
+    }
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
