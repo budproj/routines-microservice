@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { groupBy, meanBy, orderBy, uniqBy } from 'lodash';
 
@@ -15,7 +15,6 @@ import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
-import { Response } from 'express';
 
 interface FindAnswersQuery {
   before?: string;
@@ -160,6 +159,8 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
+    if (!routine) return;
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
@@ -310,6 +311,11 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
+    if (!routine) {
+      return;
+    }
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
@@ -329,6 +335,10 @@ export class AnswersController {
         },
       },
     });
+
+    if (!routine) {
+      return;
+    }
 
     const discouraged = [];
     const lowProductivity = [];
@@ -391,6 +401,10 @@ export class AnswersController {
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
+
+    if (!routine) {
+      return;
+    }
 
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);

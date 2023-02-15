@@ -4,7 +4,6 @@ import { randomUUID } from 'crypto';
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { User as UserType } from 'src/types/User';
-import { HealthCheckDBService } from '../../services/healthcheck.db.service';
 import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
@@ -20,7 +19,6 @@ interface RoutineData {
 @Controller('/')
 export class NatsController {
   constructor(
-    private healthCheckDB: HealthCheckDBService,
     private nats: MessagingService,
     private routineSettings: RoutineSettingsService,
     private cronService: CronService,
@@ -32,8 +30,6 @@ export class NatsController {
 
   @MessagePattern('health-check', Transport.NATS)
   async onHealthCheck(@Payload() data: { id: string; reply: string }) {
-    const response = await this.healthCheckDB.patch(data.id);
-
     await this.nats.emit(data.reply, true);
   }
 
@@ -50,6 +46,11 @@ export class NatsController {
     const routine = await this.routineSettings.routineSettings({
       companyId: data.user.companies[0].id,
     });
+
+    if (!routine) {
+      return [];
+    }
+
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
