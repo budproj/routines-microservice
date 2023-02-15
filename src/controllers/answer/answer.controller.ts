@@ -213,7 +213,7 @@ export class AnswerController {
             },
           ];
 
-          const roadBlockHistory = historyTimespans.map((timespan, index) => {
+          const roadBlockHistory = historyTimespans.map((timespan) => {
             const answeredRoadblock = values.find(({ timestamp }) => {
               return dayjs(timespan.startDate).isSame(timestamp);
             });

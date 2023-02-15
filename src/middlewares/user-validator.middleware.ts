@@ -28,7 +28,7 @@ export class UserValidatorMiddleware implements NestMiddleware {
       throw new HttpException('No auth token', HttpStatus.UNAUTHORIZED);
     }
 
-    const [_, token] = authHeader.split(' ');
+    const [, token] = authHeader.split(' ');
     const decodedToken = await lastValueFrom<
       JwtPayload & { permissions: string[] }
     >(this.nats.send('core-ports.verify-token', token));

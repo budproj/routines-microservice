@@ -1,4 +1,4 @@
-import { ClientNats, ClientsModule, Transport } from '@nestjs/microservices';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Test } from '@nestjs/testing';
 
 import { HealthCheckDBService } from '../../services/healthcheck.db.service';
