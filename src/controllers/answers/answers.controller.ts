@@ -160,6 +160,8 @@ export class AnswersController {
       companyId: company.id,
     });
 
+    if (!routine) return;
+
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
     const questions = form.filter(
