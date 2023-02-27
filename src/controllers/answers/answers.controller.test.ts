@@ -9,6 +9,7 @@ import { MessagingService } from '../../services/messaging.service';
 import { SecurityService } from '../../services/security.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { CronService } from '../../services/cron.service';
+import { Team } from 'src/types/Team';
 
 beforeEach(jest.resetAllMocks);
 
@@ -53,6 +54,14 @@ describe('Answers Controller', () => {
     permissions: [],
   };
 
+  const userCompany: Team = {
+    id: 'fb402944-c86e-4576-9ad8-d1aa8264ef26',
+    name: 'Rick Sanchez LTDA.',
+  };
+
+  const teamUsersMock =
+    '["522ef72a-6c3c-4075-926a-3245cdeea75f","922ef72a-6c3c-4075-926a-3245cdeea75f"]';
+
   let AnswersController: AnswersControllerClass;
   const ModuleRef = Test.createTestingModule({
     imports: [],
@@ -90,6 +99,7 @@ describe('Answers Controller', () => {
       const query = {
         before,
         after,
+        teamUsersIds: teamUsersMock,
       };
       const parsedQuery = {
         lte: new Date(query.before),
@@ -121,6 +131,11 @@ describe('Answers Controller', () => {
     it("should request the team and subteams's users info if includeSubteam query is set", async () => {
       // arrange
 
+      const query = {
+        includeSubteams: true,
+        teamUsersIds: teamUsersMock,
+      };
+
       messagingServiceMock.sendMessage
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce([userMock]);
@@ -135,22 +150,20 @@ describe('Answers Controller', () => {
       await AnswersController.findAnswersFromTeam(
         userMock,
         userMock.teams[0].id,
-        { includeSubteams: true },
+        query,
       );
 
       // assert
-      expect(messagingServiceMock.sendMessage).toBeCalledTimes(2);
-      expect(messagingServiceMock.sendMessage.mock.calls[1][1].filters).toEqual(
-        {
-          resolveTree: true,
-        },
-      );
+      expect(messagingServiceMock.sendMessage).toBeCalledTimes(1);
     });
     it("should return an array of the team's users with answer details", async () => {
       // arrange
-      messagingServiceMock.sendMessage
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage.mockResolvedValueOnce(userCompany);
+
+      const query = {
+        teamUsersIds: teamUsersMock,
+      };
+
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -161,7 +174,7 @@ describe('Answers Controller', () => {
           id: '1',
           answers: [{ value: 3 }],
           timestamp: '2022-09-15T11:09:31.143Z',
-          userId: userMock.id,
+          userId: '522ef72a-6c3c-4075-926a-3245cdeea75f',
         },
       ]);
 
@@ -169,58 +182,28 @@ describe('Answers Controller', () => {
       const answersOverViewReturn = await AnswersController.findAnswersFromTeam(
         userMock,
         userMock.teams[0].id,
-        {},
+        query,
       );
 
       // assert
       expect(answersOverViewReturn).toEqual([
         {
           id: '1',
-          name: `${userMock.firstName} ${userMock.lastName}`,
-          picture: userMock.picture,
           latestStatusReply: 3,
           timestamp: '2022-09-15T11:09:31.143Z',
-          userId: userMock.id,
+          userId: '522ef72a-6c3c-4075-926a-3245cdeea75f',
         },
       ]);
     });
-    it('should return answers for all the companies user except the disabled teams if no teamId is provided on the parameter', async () => {
-      // arrange
-      messagingServiceMock.sendMessage
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce([userMock]);
-      formServiceMock.getRoutineForm.mockReturnValueOnce([
-        { type: 'emoji_scale', id: '1' },
-        { type: 'value_range', id: '2' },
-        { type: 'road_block', id: '3' },
-      ]);
-      answerGroupServiceMock.answerGroups.mockResolvedValueOnce([
-        {
-          id: '1',
-          answers: [{ value: 3 }],
-          timestamp: '2022-09-15T11:09:31.143Z',
-          userId: userMock.id,
-        },
-      ]);
 
-      // act
-      await AnswersController.findAnswersFromTeam(userMock, undefined, {});
-
-      // assert
-      expect(securityServiceMock.isUserFromCompany).toBeCalledTimes(1);
-      expect(answerGroupServiceMock.answerGroups).toBeCalledTimes(1);
-      expect(messagingServiceMock.sendMessage.mock.calls[1][1].filters).toEqual(
-        { resolveTree: true },
-      );
-      expect(messagingServiceMock.sendMessage.mock.calls[1][1].teamID).toBe(
-        userMock.companies[0].id,
-      );
-    });
-    it("should return an array of the team's users with lastestStatusReply, timestamp and the id undefined if the user hasn't replied", async () => {
+    it('should return an empty array if none of the requested users has replied.', async () => {
       // arrange
-      messagingServiceMock.sendMessage
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce([userMock]);
+      messagingServiceMock.sendMessage.mockResolvedValueOnce({});
+
+      const query = {
+        teamUsersIds: teamUsersMock,
+      };
+
       formServiceMock.getRoutineForm.mockReturnValueOnce([
         { type: 'emoji_scale', id: '1' },
         { type: 'value_range', id: '2' },
@@ -232,20 +215,11 @@ describe('Answers Controller', () => {
       const answersOverViewReturn = await AnswersController.findAnswersFromTeam(
         userMock,
         userMock.teams[0].id,
-        {},
+        query,
       );
 
       // assert
-      expect(answersOverViewReturn).toEqual([
-        {
-          id: undefined,
-          name: `${userMock.firstName} ${userMock.lastName}`,
-          picture: userMock.picture,
-          latestStatusReply: undefined,
-          timestamp: undefined,
-          userId: userMock.id,
-        },
-      ]);
+      expect(answersOverViewReturn).toHaveLength(0);
     });
   });
 
