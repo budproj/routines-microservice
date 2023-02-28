@@ -54,7 +54,9 @@ export class AnswersController {
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
   ): Promise<AnswerOverview[]> {
-    const teamUsersIds = convertStringToArray(query.teamUsersIds);
+    const decoded = decodeURIComponent(query.teamUsersIds);
+
+    const teamUsersIds = convertStringToArray(decoded);
 
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',
