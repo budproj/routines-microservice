@@ -15,7 +15,7 @@ import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
-import { convertStringToArray } from 'src/shared/utils/convert-to-array';
+import { convertStringToArray } from '../../shared/utils/convert-to-array';
 
 interface FindAnswersQuery {
   before?: string;
@@ -54,9 +54,9 @@ export class AnswersController {
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
   ): Promise<AnswerOverview[]> {
-    const decoded = decodeURIComponent(query.teamUsersIds);
+    const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
-    const teamUsersIds = convertStringToArray(decoded);
+    const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
 
     const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
       'core-ports.get-team-company',

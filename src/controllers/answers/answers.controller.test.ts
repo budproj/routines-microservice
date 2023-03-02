@@ -59,8 +59,9 @@ describe('Answers Controller', () => {
     name: 'Rick Sanchez LTDA.',
   };
 
-  const teamUsersMock =
-    '["522ef72a-6c3c-4075-926a-3245cdeea75f","922ef72a-6c3c-4075-926a-3245cdeea75f"]';
+  const teamUsersMock = encodeURIComponent(
+    "['522ef72a-6c3c-4075-926a-3245cdeea75f', '922ef72a-6c3c-4075-926a-3245cdeea75f']",
+  );
 
   let AnswersController: AnswersControllerClass;
   const ModuleRef = Test.createTestingModule({

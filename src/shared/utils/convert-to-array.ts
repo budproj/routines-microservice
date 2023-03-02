@@ -1,6 +1,4 @@
 export const convertStringToArray = (stringArray: string): any[] => {
-  console.log({ stringArray });
-
   const array = stringArray.replace(/[\[\]]/g, '').split(',');
 
   const result = array.map((element) => {
