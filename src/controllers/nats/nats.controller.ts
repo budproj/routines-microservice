@@ -19,7 +19,7 @@ interface RoutineData {
 @Controller('/')
 export class NatsController {
   constructor(
-    private nats: MessagingService,
+    private messaging: MessagingService,
     private routineSettings: RoutineSettingsService,
     private cronService: CronService,
     private answerGroupService: AnswerGroupService,
@@ -30,7 +30,7 @@ export class NatsController {
 
   @MessagePattern('health-check', Transport.NATS)
   async onHealthCheck(@Payload() data: { id: string; reply: string }) {
-    await this.nats.emit(data.reply, true);
+    await this.messaging.emit(data.reply, true);
   }
 
   @MessagePattern('user-last-routine', Transport.NATS)
@@ -78,13 +78,11 @@ export class NatsController {
   async routineNotification(@Payload() routineData: RoutineData) {
     this.logger.log('New routine notification message with data:', routineData);
 
-    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
-      'core-ports.get-users-from-team',
-      {
-        teamID: routineData.companyId,
-        filters: { resolveTree: true, withTeams: true },
-      },
-    );
+    const payload = {
+      teamID: routineData.companyId,
+      filters: { resolveTree: true, withTeams: true },
+    };
+    const companyUsers = await this.messaging.sendMessage<UserType[]>('business.core-ports.get-users-from-team', payload);
 
     const filteredUsers = companyUsers
       .filter((user) => {
@@ -120,10 +118,11 @@ export class NatsController {
       );
     });
 
-    this.nats.sendMessage('notification-ports.PENDENCIES-NOTIFICATION', {
+    const pendenciesPayload = {
       companyUsers,
       usersWithPendingRoutines,
-    });
+    }
+    await this.messaging.emit('business.notification-ports.pendencies-notification', pendenciesPayload);
   }
 
   @MessagePattern('routine-reminder-notification', Transport.NATS)
@@ -133,13 +132,11 @@ export class NatsController {
       routineData,
     );
 
-    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
-      'core-ports.get-users-from-team',
-      {
-        teamID: routineData.companyId,
-        filters: { resolveTree: true, withTeams: true },
-      },
-    );
+    const payload = {
+      teamID: routineData.companyId,
+      filters: { resolveTree: true, withTeams: true },
+    }
+    const companyUsers = await this.messaging.sendMessage<UserType[]>('business.core-ports.get-users-from-team', payload);
 
     const filteredUsers = companyUsers
       .filter((user) =>
@@ -189,7 +186,7 @@ export class NatsController {
 
       messages.forEach((message) => {
         this.logger.log('Sending notification', message);
-        this.nats.emit('notification', message);
+        this.messaging.emit('notifications-microservice.notification', message);
       });
     }
   }
