@@ -1,3 +1,7 @@
+import {
+  defaultNackErrorHandler,
+  RabbitRPC,
+} from '@golevelup/nestjs-rabbitmq';
 import { Controller, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
@@ -28,12 +32,28 @@ export class NatsController {
 
   private readonly logger = new Logger(NatsController.name);
 
-  @MessagePattern('health-check', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.health-check',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async onHealthCheck(@Payload() data: { id: string; reply: string }) {
     await this.messaging.emit(data.reply, true);
   }
 
-  @MessagePattern('user-last-routine', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.user-last-routine',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async userLastRoutine(@Payload() data: { user: UserType }) {
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
@@ -74,7 +94,15 @@ export class NatsController {
     return answerGroups;
   }
 
-  @MessagePattern('routine-notification', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.routine-notification',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async routineNotification(@Payload() routineData: RoutineData) {
     this.logger.log('New routine notification message with data:', routineData);
 
@@ -125,7 +153,15 @@ export class NatsController {
     await this.messaging.emit('business.notification-ports.pendencies-notification', pendenciesPayload);
   }
 
-  @MessagePattern('routine-reminder-notification', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.routine-reminder-notification',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async routineReminder(@Payload() routineData: RoutineData) {
     this.logger.log(
       'New routine reminder notification message with data:',
