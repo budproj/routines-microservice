@@ -30,19 +30,19 @@ export class UserValidatorMiddleware implements NestMiddleware {
     const [, token] = authHeader.split(' ');
     const decodedToken = await this.rabbitmq.request<JwtPayload>({
       exchange: 'bud',
-      routingKey: 'busines.core-ports.verify-token',
+      routingKey: 'business.core-ports.verify-token',
       payload: token,
     });
 
     const user = await this.rabbitmq.request<User>({
       exchange: 'bud',
-      routingKey: 'busines.core-ports.get-user-with-teams-by-sub',
+      routingKey: 'business.core-ports.get-user-with-teams-by-sub',
       payload: decodedToken.sub,
     });
 
     const userCompanies = await this.rabbitmq.request<Team[]>({
       exchange: 'bud',
-      routingKey: 'busines.core-ports.get-user-companies',
+      routingKey: 'business.core-ports.get-user-companies',
       payload: user,
     });
 

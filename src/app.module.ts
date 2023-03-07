@@ -6,7 +6,7 @@ import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { AnswerController } from './controllers/answer/answer.controller';
 import { HealthCheckRestController } from './controllers/health-check/healthcheck.rest.controller';
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
-import { NatsController } from './controllers/nats/nats.controller';
+import { NatsController } from './controllers/rabbitmq/rabbitmq.controller';
 import { FormControler } from './controllers/forms/form.controller';
 import { AnswersController } from './controllers/answers/answers.controller';
 import { SettingsController } from './controllers/settings/settings.controller';
