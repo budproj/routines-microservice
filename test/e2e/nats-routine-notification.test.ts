@@ -51,7 +51,7 @@ describe('NATS - Routine Notification', () => {
 
     //Act
     const response = await natsConnection.request(
-      'routine-notification',
+      'routines-microservice.routine-notification',
       jsonCodec.encode(input),
       {
         timeout: 10_000,

@@ -65,7 +65,7 @@ export class SettingsController {
 
     const routineNotificationData = {
       ...createdSettings,
-      queue: 'routine-notification',
+      queue: 'routines-microservice.routine-notification',
     };
     this.messaging.emit('scheduler-microservice:updateSchedule', routineNotificationData)
 
@@ -73,7 +73,7 @@ export class SettingsController {
 
     const routineReminderNotificationData = {
       ...createdSettings,
-      queue: 'routine-reminder-notification',
+      queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
     this.messaging.emit('scheduler-microservice:updateSchedule', routineReminderNotificationData);
@@ -101,7 +101,7 @@ export class SettingsController {
 
     const routineNotificationData = {
       ...updatedSettings,
-      queue: 'routine-notification',
+      queue: 'routines-microservice.routine-notification',
     };
     this.messaging.emit('scheduler-microservice:updateSchedule', routineNotificationData);
 
@@ -109,7 +109,7 @@ export class SettingsController {
 
     const routineReminderNotificationData = {
       ...updatedSettings,
-      queue: 'routine-reminder-notification',
+      queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
     this.messaging.emit('scheduler-microservice:updateSchedule', routineReminderNotificationData);
