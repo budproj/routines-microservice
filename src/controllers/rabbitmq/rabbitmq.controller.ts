@@ -35,6 +35,7 @@ export class NatsController {
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.health-check',
+    routingKey: 'routines-microservice.health-check',
     errorHandler: defaultNackErrorHandler,
     queueOptions: {
       deadLetterExchange: 'dead',
@@ -48,6 +49,7 @@ export class NatsController {
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.user-last-routine',
+    routingKey: 'routines-microservice.user-last-routine',
     errorHandler: defaultNackErrorHandler,
     queueOptions: {
       deadLetterExchange: 'dead',
@@ -97,6 +99,7 @@ export class NatsController {
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.routine-notification',
+    routingKey: 'routines-microservice.routine-notification',
     errorHandler: defaultNackErrorHandler,
     queueOptions: {
       deadLetterExchange: 'dead',
@@ -156,6 +159,7 @@ export class NatsController {
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.routine-reminder-notification',
+    routingKey: 'routines-microservice.routine-reminder-notification',
     errorHandler: defaultNackErrorHandler,
     queueOptions: {
       deadLetterExchange: 'dead',
