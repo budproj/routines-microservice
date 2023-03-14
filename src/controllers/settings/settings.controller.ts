@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Patch,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Patch } from '@nestjs/common';
 import { RoutineSettings } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
@@ -34,7 +27,10 @@ export class SettingsController {
   ) {
     this.security.userHasPermission(user.permissions, 'routines:create:any');
 
-    const companies = await this.messaging.sendMessage<Team[]>('business.core-ports.get-companies', {});
+    const companies = await this.messaging.sendMessage<Team[]>(
+      'business.core-ports.get-companies',
+      {},
+    );
 
     const createPromises = companies.map((company) => {
       return this.createSettings(user, { companyId: company.id }, settings);
@@ -67,7 +63,10 @@ export class SettingsController {
       ...createdSettings,
       queue: 'routines-microservice.routine-notification',
     };
-    this.messaging.emit('scheduler-microservice:updateSchedule', routineNotificationData)
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineNotificationData,
+    );
 
     const routineReminderCron = '0 6 * * 1';
 
@@ -76,7 +75,10 @@ export class SettingsController {
       queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
-    this.messaging.emit('scheduler-microservice:updateSchedule', routineReminderNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineReminderNotificationData,
+    );
 
     return createdSettings;
   }
@@ -103,7 +105,10 @@ export class SettingsController {
       ...updatedSettings,
       queue: 'routines-microservice.routine-notification',
     };
-    this.messaging.emit('scheduler-microservice:updateSchedule', routineNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineNotificationData,
+    );
 
     const routineReminderCron = '0 6 * * 1';
 
@@ -112,7 +117,10 @@ export class SettingsController {
       queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
-    this.messaging.emit('scheduler-microservice:updateSchedule', routineReminderNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineReminderNotificationData,
+    );
 
     return updatedSettings;
   }

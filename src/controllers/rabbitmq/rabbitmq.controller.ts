@@ -1,11 +1,8 @@
-import {
-  defaultNackErrorHandler,
-  RabbitRPC,
-} from '@golevelup/nestjs-rabbitmq';
+import { defaultNackErrorHandler, RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 import { Controller, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
-import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
+import { Payload } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { User as UserType } from 'src/types/User';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -113,7 +110,10 @@ export class NatsController {
       teamID: routineData.companyId,
       filters: { resolveTree: true, withTeams: true },
     };
-    const companyUsers = await this.messaging.sendMessage<UserType[]>('business.core-ports.get-users-from-team', payload);
+    const companyUsers = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      payload,
+    );
 
     const filteredUsers = companyUsers
       .filter((user) => {
@@ -152,8 +152,11 @@ export class NatsController {
     const pendenciesPayload = {
       companyUsers,
       usersWithPendingRoutines,
-    }
-    await this.messaging.emit('business.notification-ports.pendencies-notification', pendenciesPayload);
+    };
+    await this.messaging.emit(
+      'business.notification-ports.pendencies-notification',
+      pendenciesPayload,
+    );
   }
 
   @RabbitRPC({
@@ -175,8 +178,11 @@ export class NatsController {
     const payload = {
       teamID: routineData.companyId,
       filters: { resolveTree: true, withTeams: true },
-    }
-    const companyUsers = await this.messaging.sendMessage<UserType[]>('business.core-ports.get-users-from-team', payload);
+    };
+    const companyUsers = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      payload,
+    );
 
     const filteredUsers = companyUsers
       .filter((user) =>
@@ -224,10 +230,15 @@ export class NatsController {
         )
         .flat();
 
-      messages.forEach((message) => {
+      const messagesPromises = messages.map(async (message) => {
         this.logger.log('Sending notification', message);
-        this.messaging.emit('notifications-microservice.notification', message);
+        await this.messaging.emit(
+          'notifications-microservice.notification',
+          message,
+        );
       });
+
+      await Promise.all(messagesPromises);
     }
   }
 }
