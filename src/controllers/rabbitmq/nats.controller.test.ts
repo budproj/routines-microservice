@@ -7,7 +7,7 @@ import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
 
-import { NatsController } from './nats.controller';
+import { NatsController } from './rabbitmq.controller';
 import { FormService } from '../../services/form.service';
 
 describe('NATS Controller', () => {

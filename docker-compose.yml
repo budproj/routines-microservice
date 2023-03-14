@@ -1,18 +1,6 @@
 version: "3"
 
 services:
-  broker-nats:
-    image: nats
-    restart: unless-stopped
-    ports:
-      - ${NATS_PORT:-4222}:4222
-      - ${NATS_MONITORING_PORT:-8222}:8222
-
-  nats-box:
-    image: natsio/nats-box:latest
-    links:
-      - broker-nats
-
   postgres:
     image: postgres:alpine
     env_file:
@@ -21,15 +9,26 @@ services:
       - ./postgres-data/:/data/postgres
     ports:
       - ${POSTGRES_PORT:-5432}:5432
-
+    networks:
+      - bud-routines
 
   routine-microservice:
     build: .
     ports:
-      - 3000:3000
+      - 3002:3000
+    networks:
+      - bud-rabbitmq
+      - bud-routines
     links:
-      - broker-nats
+      - postgres
     environment:
       PORT: 3000
       NATS_CONNECTION_STRING: nats://broker-nats:4222
       DATABASE_URL: postgresql://routines:changeme@postgres:5432/routines?schema=public
+      AUTHZ_ISSUER: 'https://dev-0qjqjqjq.auth0.com/'
+      RABBITMQ_CONNECTION_STRING: amqp://rabbitmq:5672
+
+networks:
+  bud-rabbitmq:
+    external: true
+  bud-routines:

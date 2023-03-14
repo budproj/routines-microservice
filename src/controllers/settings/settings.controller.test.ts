@@ -112,7 +112,7 @@ describe('Settings Controller', () => {
       expect(emitMock).toBeCalledTimes(2);
       expect(emitMock).toBeCalledWith('updateSchedule', {
         ...createdSettings,
-        queue: 'routine-notification',
+        queue: 'routines-microservice.routine-notification',
       });
       expect(emitMock).toHaveBeenLastCalledWith('updateSchedule', {
         ...createdSettings,
@@ -237,7 +237,7 @@ describe('Settings Controller', () => {
       expect(emitMock).toBeCalledTimes(2);
       expect(emitMock).toBeCalledWith('updateSchedule', {
         ...settings,
-        queue: 'routine-notification',
+        queue: 'routines-microservice.routine-notification',
       });
     });
 

@@ -39,7 +39,7 @@ describe('NATS - Routine Notification', () => {
       disabledTeams: [],
       cron: '0 0 * * 5',
     };
-    const replyQueue = 'notification-ports.PENDENCIES-NOTIFICATION';
+    const replyQueue = 'notification-ports.pendencies-notification';
 
     natsConnection.subscribe('core-ports.get-users-from-team', {
       callback: (error, msg) => msg.respond(jsonCodec.encode([])),
@@ -51,7 +51,7 @@ describe('NATS - Routine Notification', () => {
 
     //Act
     const response = await natsConnection.request(
-      'routine-notification',
+      'routines-microservice.routine-notification',
       jsonCodec.encode(input),
       {
         timeout: 10_000,

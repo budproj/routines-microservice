@@ -1,11 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 
 import { AnswerController } from './controllers/answer/answer.controller';
 import { HealthCheckRestController } from './controllers/health-check/healthcheck.rest.controller';
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
-import { NatsController } from './controllers/nats/nats.controller';
+import { NatsController } from './controllers/rabbitmq/rabbitmq.controller';
 import { FormControler } from './controllers/forms/form.controller';
 import { AnswersController } from './controllers/answers/answers.controller';
 import { SettingsController } from './controllers/settings/settings.controller';
@@ -32,19 +33,15 @@ import configuration from './config/configuration';
       load: [configuration],
       isGlobal: true,
     }),
-    ClientsModule.registerAsync([
-      {
-        name: 'NATS_SERVICE',
-        imports: [ConfigModule],
-        inject: [ConfigService],
-        useFactory: async (configService: ConfigService) => ({
-          transport: Transport.NATS,
-          options: {
-            servers: [configService.get<string>('natsConnectionString')],
-          },
-        }),
-      },
-    ]),
+    RabbitMQModule.forRootAsync(RabbitMQModule, {
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        exchanges: [{ name: 'bud', type: 'topic' }],
+        uri: configService.get<string>('rabbitmqConnectionString'),
+        enableControllerDiscovery: true,
+      }),
+    }),
   ],
   controllers: [
     NatsController,
