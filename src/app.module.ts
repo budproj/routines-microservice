@@ -40,6 +40,7 @@ import configuration from './config/configuration';
         exchanges: [{ name: 'bud', type: 'topic' }],
         uri: configService.get<string>('rabbitmqConnectionString'),
         enableControllerDiscovery: true,
+        connectionInitOptions: { wait: true },
       }),
     }),
   ],
