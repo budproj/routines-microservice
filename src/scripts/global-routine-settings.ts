@@ -30,6 +30,8 @@ async function bootstrap() {
 
   await settings.globalRoutineSettingsCreation(user, baseSettings);
 
+  await setTimeout(10_000); // Tech Debt: for some reason connections to rabbitmq do not imediatly closes
+
   await app.close();
 }
 bootstrap();
