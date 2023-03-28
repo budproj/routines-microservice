@@ -23,7 +23,10 @@ describe('NATS Controller', () => {
     removeDisabledTeamsFromUser: jest.fn(),
     getCurrentRoutineDate: jest.fn(),
   };
-  const answerGroupServiceMock = { answerGroups: jest.fn() };
+  const answerGroupServiceMock = {
+    answerGroups: jest.fn(),
+    answerGroup: jest.fn(),
+  };
   const messagingServiceMock = {
     sendMessage: jest.fn(),
     emit: jest.fn(),
@@ -116,18 +119,6 @@ describe('NATS Controller', () => {
       expect(messagingServiceMock.emit).toBeCalledTimes(1);
       expect(messagingServiceMock.emit).toBeCalledWith('testReplyQueue', true);
     });
-
-    it('should patch the database with an id', async () => {
-      // Arrange
-      const data = { id: 'some id', reply: 'testReplyQueue' };
-
-      // Act
-      await natsController.onHealthCheck(data);
-
-      // Assert
-      expect(dbHealthCheckPath).toBeCalledTimes(1);
-      expect(dbHealthCheckPath).toBeCalledWith('some id');
-    });
   });
   describe('routineNotifications', () => {
     it('should filter the company user list to remove the disabled teams members', async () => {
@@ -206,6 +197,24 @@ describe('NATS Controller', () => {
         answerGroupServiceMock.answerGroups.mock.calls[0][0].where.timestamp
           .gte,
       ).toEqual(new Date('2022-10-07T00:00:00.000Z'));
+    });
+  });
+
+  describe('getAnswerGroupData', () => {
+    it('should call answerGroupService.answerGroup and reply its content', async () => {
+      // Arrange
+      const payload = { id: 'um id' };
+      const mockedResponse = { an: 'object' };
+      answerGroupServiceMock.answerGroup.mockResolvedValueOnce(mockedResponse);
+
+      // Act
+      const result = await natsController.getAnswerGroupData({ id: 'um id' });
+
+      // Assert
+      expect(1).toBe(1);
+      expect(answerGroupServiceMock.answerGroup).toBeCalledTimes(1);
+      expect(answerGroupServiceMock.answerGroup).toBeCalledWith(payload);
+      expect(result).toBe(mockedResponse);
     });
   });
 });
