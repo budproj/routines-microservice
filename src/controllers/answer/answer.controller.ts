@@ -240,10 +240,7 @@ export class AnswerController {
     });
 
     const validAnswers = userAnswers.filter((answer) => answer);
-    const userThatAnswered = await this.messaging.sendMessage<
-      UserType['id'],
-      UserType
-    >('core-ports.get-user', answerGroup.userId);
+    const userThatAnswered = await this.messaging.sendMessage<UserType>('business.core-ports.get-user', answerGroup.userId);
 
     const answerDetails = {
       user: userThatAnswered,

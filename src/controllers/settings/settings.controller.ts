@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Post,
-  Patch,
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { Body, Controller, Get, Param, Post, Patch } from '@nestjs/common';
 import { RoutineSettings } from '@prisma/client';
 
 import { User } from '../../decorators/user.decorator';
@@ -16,17 +7,17 @@ import { User as UserType } from '../../types/User';
 
 import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
-import { lastValueFrom } from 'rxjs';
 import { Team } from 'src/types/Team';
 import { SettingsWithoutCompany } from 'src/types/Settings';
+import { MessagingService } from 'src/services/messaging.service';
 
 @Controller('/settings')
 export class SettingsController {
   constructor(
-    @Inject('NATS_SERVICE') private nats: ClientProxy,
     private routineSettings: RoutineSettingsService,
     private cron: CronService,
     private security: SecurityService,
+    private messaging: MessagingService,
   ) {}
 
   @Post('')
@@ -36,8 +27,9 @@ export class SettingsController {
   ) {
     this.security.userHasPermission(user.permissions, 'routines:create:any');
 
-    const companies = await lastValueFrom<Team[]>(
-      this.nats.send('core-ports.get-companies', {}),
+    const companies = await this.messaging.sendMessage<Team[]>(
+      'business.core-ports.get-companies',
+      {},
     );
 
     const createPromises = companies.map((company) => {
@@ -69,18 +61,24 @@ export class SettingsController {
 
     const routineNotificationData = {
       ...createdSettings,
-      queue: 'routine-notification',
+      queue: 'routines-microservice.routine-notification',
     };
-    this.nats.emit('updateSchedule', routineNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineNotificationData,
+    );
 
     const routineReminderCron = '0 6 * * 1';
 
     const routineReminderNotificationData = {
       ...createdSettings,
-      queue: 'routine-reminder-notification',
+      queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
-    this.nats.emit('updateSchedule', routineReminderNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineReminderNotificationData,
+    );
 
     return createdSettings;
   }
@@ -105,18 +103,24 @@ export class SettingsController {
 
     const routineNotificationData = {
       ...updatedSettings,
-      queue: 'routine-notification',
+      queue: 'routines-microservice.routine-notification',
     };
-    this.nats.emit('updateSchedule', routineNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineNotificationData,
+    );
 
     const routineReminderCron = '0 6 * * 1';
 
     const routineReminderNotificationData = {
       ...updatedSettings,
-      queue: 'routine-reminder-notification',
+      queue: 'routines-microservice.routine-reminder-notification',
       cron: routineReminderCron,
     };
-    this.nats.emit('updateSchedule', routineReminderNotificationData);
+    await this.messaging.emit(
+      'scheduler-microservice:updateSchedule',
+      routineReminderNotificationData,
+    );
 
     return updatedSettings;
   }

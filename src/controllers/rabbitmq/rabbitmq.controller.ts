@@ -1,7 +1,8 @@
+import { defaultNackErrorHandler, RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 import { Controller, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
-import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
+import { Payload } from '@nestjs/microservices';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { User as UserType } from 'src/types/User';
 import { AnswerGroupService } from '../../services/answerGroup.service';
@@ -19,7 +20,7 @@ interface RoutineData {
 @Controller('/')
 export class NatsController {
   constructor(
-    private nats: MessagingService,
+    private messaging: MessagingService,
     private routineSettings: RoutineSettingsService,
     private cronService: CronService,
     private answerGroupService: AnswerGroupService,
@@ -28,12 +29,30 @@ export class NatsController {
 
   private readonly logger = new Logger(NatsController.name);
 
-  @MessagePattern('health-check', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.health-check',
+    routingKey: 'routines-microservice.health-check',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async onHealthCheck(@Payload() data: { id: string; reply: string }) {
-    await this.nats.emit(data.reply, true);
+    await this.messaging.emit(data.reply, true);
   }
 
-  @MessagePattern('user-last-routine', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.user-last-routine',
+    routingKey: 'routines-microservice.user-last-routine',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async userLastRoutine(@Payload() data: { user: UserType }) {
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
@@ -74,16 +93,26 @@ export class NatsController {
     return answerGroups;
   }
 
-  @MessagePattern('routine-notification', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.routine-notification',
+    routingKey: 'routines-microservice.routine-notification',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async routineNotification(@Payload() routineData: RoutineData) {
     this.logger.log('New routine notification message with data:', routineData);
 
-    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
-      'core-ports.get-users-from-team',
-      {
-        teamID: routineData.companyId,
-        filters: { resolveTree: true, withTeams: true },
-      },
+    const payload = {
+      teamID: routineData.companyId,
+      filters: { resolveTree: true, withTeams: true },
+    };
+    const companyUsers = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      payload,
     );
 
     const filteredUsers = companyUsers
@@ -120,25 +149,39 @@ export class NatsController {
       );
     });
 
-    this.nats.sendMessage('notification-ports.PENDENCIES-NOTIFICATION', {
+    const pendenciesPayload = {
       companyUsers,
       usersWithPendingRoutines,
-    });
+    };
+    await this.messaging.emit(
+      'business.notification-ports.pendencies-notification',
+      pendenciesPayload,
+    );
   }
 
-  @MessagePattern('routine-reminder-notification', Transport.NATS)
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.routine-reminder-notification',
+    routingKey: 'routines-microservice.routine-reminder-notification',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
   async routineReminder(@Payload() routineData: RoutineData) {
     this.logger.log(
       'New routine reminder notification message with data:',
       routineData,
     );
 
-    const companyUsers = await this.nats.sendMessage<any, UserType[]>(
-      'core-ports.get-users-from-team',
-      {
-        teamID: routineData.companyId,
-        filters: { resolveTree: true, withTeams: true },
-      },
+    const payload = {
+      teamID: routineData.companyId,
+      filters: { resolveTree: true, withTeams: true },
+    };
+    const companyUsers = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      payload,
     );
 
     const filteredUsers = companyUsers
@@ -187,10 +230,15 @@ export class NatsController {
         )
         .flat();
 
-      messages.forEach((message) => {
+      const messagesPromises = messages.map(async (message) => {
         this.logger.log('Sending notification', message);
-        this.nats.emit('notification', message);
+        await this.messaging.emit(
+          'notifications-microservice.notification',
+          message,
+        );
       });
+
+      await Promise.all(messagesPromises);
     }
   }
 }

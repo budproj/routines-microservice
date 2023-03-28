@@ -24,11 +24,6 @@ interface FindAnswersQuery {
   teamUsersIds: string;
 }
 
-interface MessagingQuery {
-  teamID: string;
-  filters: { resolveTree: boolean };
-}
-
 interface AnswerOverview {
   id?: Answer['id'];
   userId: UserType['id'];
@@ -40,7 +35,7 @@ interface AnswerOverview {
 @Controller('/answers')
 export class AnswersController {
   constructor(
-    private nats: MessagingService,
+    private messaging: MessagingService,
     private answerGroupService: AnswerGroupService,
     private formService: FormService,
     private securityService: SecurityService,
@@ -57,9 +52,8 @@ export class AnswersController {
     const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
     const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
-
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
+    const company = await this.messaging.sendMessage<Team>(
+      'business.core-ports.get-team-company',
       { id: teamId ?? user.companies[0].id },
     );
 
@@ -109,10 +103,9 @@ export class AnswersController {
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
         try {
-          const commentCount = await this.nats.sendMessage<
-            any,
+          const commentCount = await this.messaging.sendMessage<
             number | undefined
-          >('comment-count', `routine:${answer.id}`);
+          >('comments-microservice.comment-count', `routine:${answer.id}`);
 
           return {
             ...answer,
@@ -136,20 +129,20 @@ export class AnswersController {
     @Query('after') after?: string,
     @Query('before') before?: string,
   ) {
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
+    const company = await this.messaging.sendMessage<Team>(
+      'business.core-ports.get-team-company',
       { id: teamId ?? user.companies[0].id },
     );
 
     this.securityService.isUserFromCompany(user, company.id);
 
-    const usersFromTeam = await this.nats.sendMessage<
-      MessagingQuery,
-      UserType[]
-    >('core-ports.get-users-from-team', {
-      teamID: teamId ?? user.companies[0].id,
-      filters: { resolveTree: teamId ? includeSubteams : true },
-    });
+    const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      {
+        teamID: teamId ?? user.companies[0].id,
+        filters: { resolveTree: teamId ? includeSubteams : true },
+      },
+    );
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
@@ -280,20 +273,20 @@ export class AnswersController {
     @User() user: UserType,
     @Param('teamId') teamId: string,
   ) {
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
+    const company = await this.messaging.sendMessage<Team>(
+      'business.core-ports.get-team-company',
       { id: teamId ?? user.companies[0].id },
     );
 
     this.securityService.isUserFromCompany(user, company.id);
 
-    const usersFromTeam = await this.nats.sendMessage<
-      MessagingQuery,
-      UserType[]
-    >('core-ports.get-users-from-team', {
-      teamID: teamId ?? user.companies[0].id,
-      filters: { resolveTree: true },
-    });
+    const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      {
+        teamID: teamId ?? user.companies[0].id,
+        filters: { resolveTree: true },
+      },
+    );
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
@@ -379,8 +372,8 @@ export class AnswersController {
     @User() user: UserType,
     @Param('userId') userId: string,
   ) {
-    const company = await this.nats.sendMessage<{ id: Team['id'] }, Team>(
-      'core-ports.get-team-company',
+    const company = await this.messaging.sendMessage<Team>(
+      'business.core-ports.get-team-company',
       { id: user.companies[0].id },
     );
 

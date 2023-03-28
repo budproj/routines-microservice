@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 
 import { SettingsController } from '../controllers/settings/settings.controller';
 import { AppModule } from '../app.module';
+import { setTimeout } from 'node:timers/promises';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -28,6 +29,9 @@ async function bootstrap() {
   };
 
   await settings.globalRoutineSettingsCreation(user, baseSettings);
+
+  await setTimeout(10_000); // Tech Debt: for some reason connections to rabbitmq do not imediatly closes
+
   await app.close();
 }
 bootstrap();
