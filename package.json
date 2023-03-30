@@ -35,7 +35,7 @@
     "@nestjs/microservices": "^9.2.0",
     "@nestjs/platform-express": "^9.2.0",
     "@prisma/client": "^4.7.1",
-    "cron-parser": "^4.6.0",
+    "cron-parser": "^4.8.1",
     "dayjs": "^1.11.6",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
