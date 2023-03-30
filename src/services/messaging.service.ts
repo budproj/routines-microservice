@@ -1,6 +1,5 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { Inject, Injectable } from '@nestjs/common';
-import { lastValueFrom } from 'rxjs';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MessagingService {

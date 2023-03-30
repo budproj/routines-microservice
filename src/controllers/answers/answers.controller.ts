@@ -22,11 +22,6 @@ interface FindAnswersQuery {
   includeSubteams?: boolean;
 }
 
-interface MessagingQuery {
-  teamID: string;
-  filters: { resolveTree: boolean };
-}
-
 interface AnswerOverview {
   id?: Answer['id'];
   name: string;
@@ -60,7 +55,8 @@ export class AnswersController {
     this.securityService.isUserFromCompany(user, company.id);
 
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
-      'business.core-ports.get-users-from-team', {
+      'business.core-ports.get-users-from-team',
+      {
         teamID: teamId ?? user.companies[0].id,
         filters: { resolveTree: teamId ? query.includeSubteams : true },
       },
@@ -150,7 +146,7 @@ export class AnswersController {
       {
         teamID: teamId ?? user.companies[0].id,
         filters: { resolveTree: teamId ? includeSubteams : true },
-      }
+      },
     );
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
@@ -294,7 +290,7 @@ export class AnswersController {
       {
         teamID: teamId ?? user.companies[0].id,
         filters: { resolveTree: true },
-      }
+      },
     );
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
