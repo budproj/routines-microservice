@@ -7,9 +7,9 @@ import { User as UserType } from '../../types/User';
 
 import { CronService } from '../../services/cron.service';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
-import { Team } from '../../types/Team';
-import { SettingsWithoutCompany } from '../../types/Settings';
-import { MessagingService } from '../../services/messaging.service';
+import { Team } from 'src/types/Team';
+import { SettingsWithoutCompany } from 'src/types/Settings';
+import { MessagingService } from 'src/services/messaging.service';
 
 @Controller('/settings')
 export class SettingsController {

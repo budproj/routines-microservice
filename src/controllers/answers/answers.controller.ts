@@ -15,21 +15,19 @@ import { Team } from '../../types/Team';
 import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
-import { convertStringToArray } from '../../shared/utils/convert-to-array';
 
 interface FindAnswersQuery {
   before?: string;
   after?: string;
   includeSubteams?: boolean;
-  teamUsersIds: string;
 }
 
 interface AnswerOverview {
   id?: Answer['id'];
-  userId: UserType['id'];
+  name: string;
+  picture: UserType['picture'];
   timestamp?: Date;
   latestStatusReply?: number;
-  commentCount?: number;
 }
 
 @Controller('/answers')
@@ -49,15 +47,22 @@ export class AnswersController {
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
   ): Promise<AnswerOverview[]> {
-    const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
-
-    const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
     const company = await this.messaging.sendMessage<Team>(
       'business.core-ports.get-team-company',
       { id: teamId ?? user.companies[0].id },
     );
 
     this.securityService.isUserFromCompany(user, company.id);
+
+    const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      {
+        teamID: teamId ?? user.companies[0].id,
+        filters: { resolveTree: teamId ? query.includeSubteams : true },
+      },
+    );
+
+    const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
@@ -67,7 +72,7 @@ export class AnswersController {
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
-        userId: { in: teamUsersIds },
+        userId: { in: usersFromTeamIds },
         timestamp: { lte: new Date(query.before), gte: new Date(query.after) },
       },
       include: {
@@ -79,41 +84,41 @@ export class AnswersController {
       },
     });
 
-    const teamUsersThatAnswered = teamUsersIds.filter((teamUserId) =>
-      answerGroups.find(({ userId }) => userId === teamUserId),
-    );
-
-    const formattedAnswerOverview = teamUsersThatAnswered.map((userId) => {
+    const formattedAnswerOverview = usersFromTeam.map((user) => {
       const answerGroup = answerGroups.find(
-        (answerGroup) => answerGroup.userId === userId,
+        (answerGroup) => answerGroup.userId === user.id,
       );
 
-      if (answerGroup) {
-        return {
-          id: answerGroup.id,
-          userId: userId,
-          latestStatusReply: answerGroup.answers[0].value
-            ? Number(answerGroup.answers[0].value)
-            : undefined,
-          timestamp: answerGroup.timestamp,
-        };
-      }
+      return {
+        id: answerGroup?.id,
+        userId: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        picture: user.picture,
+        latestStatusReply: answerGroup?.answers[0].value
+          ? Number(answerGroup.answers[0].value)
+          : undefined,
+        timestamp: answerGroup?.timestamp,
+      };
     });
 
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
-        try {
-          const commentCount = await this.messaging.sendMessage<
-            number | undefined
-          >('comments-microservice.comment-count', `routine:${answer.id}`);
+        if (answer.id) {
+          try {
+            const commentCount = await this.messaging.sendMessage(
+              'comments-microservice.comment-count',
+              `routine:${answer.id}`,
+            );
 
-          return {
-            ...answer,
-            commentCount,
-          };
-        } catch (err) {
-          return answer;
+            return {
+              ...answer,
+              commentCount,
+            };
+          } catch (err) {
+            return answer;
+          }
         }
+        return answer;
       }),
     );
 
