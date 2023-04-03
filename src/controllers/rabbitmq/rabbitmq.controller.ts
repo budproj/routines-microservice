@@ -241,4 +241,22 @@ export class NatsController {
       await Promise.all(messagesPromises);
     }
   }
+
+  @RabbitRPC({
+    exchange: 'bud',
+    queue: 'routines-microservice.get-answer-group-data',
+    routingKey: 'routines-microservice.get-answer-group-data',
+    errorHandler: defaultNackErrorHandler,
+    queueOptions: {
+      deadLetterExchange: 'dead',
+      deadLetterRoutingKey: 'dead',
+    },
+  })
+  async getAnswerGroupData(@Payload() { id }: { id: string }) {
+    this.logger.log('get Answer Group', { id });
+
+    const answerGroup = await this.answerGroupService.answerGroup({ id });
+    this.logger.verbose('got Answer Group', { answerGroup });
+    return answerGroup;
+  }
 }
