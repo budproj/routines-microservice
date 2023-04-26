@@ -27,6 +27,7 @@ model AnswerGroup {
   userId String     @db.Uuid
   answers Answer[]
   timestamp DateTime @default(now())
+  @@index([userId, timestamp(sort: Desc)])
 }
 
 model Answer {

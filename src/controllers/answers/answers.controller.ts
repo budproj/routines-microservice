@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { groupBy, meanBy, orderBy, uniqBy } from 'lodash';
 
@@ -34,6 +34,8 @@ interface AnswerOverview {
 
 @Controller('/answers')
 export class AnswersController {
+  private readonly logger = new Logger(AnswersController.name);
+
   constructor(
     private messaging: MessagingService,
     private answerGroupService: AnswerGroupService,
@@ -42,6 +44,22 @@ export class AnswersController {
     private routineSettingsService: RoutineSettingsService,
     private cronService: CronService,
   ) {}
+
+  /**
+   * @deprecated TODO: refactor into a proper aspected-oriented logging system instead of polluting the business logic
+   */
+  $timer(startMessage: string) {
+    this.logger.log(startMessage);
+    const startedAt = Date.now();
+
+    /**
+     * @deprecated see above
+     */
+    return (endMessage: string) => {
+      const duration = Date.now() - startedAt;
+      this.logger.log(`${endMessage} after ${duration}ms`);
+    };
+  }
 
   @Get('/summary/:teamId?')
   async findAnswersFromTeam(
@@ -65,6 +83,8 @@ export class AnswersController {
       (question) => question.type === 'emoji_scale',
     );
 
+    const answerGroupsTimer = this.$timer(`About to find summary for ${teamId}`);
+
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: teamUsersIds },
@@ -78,6 +98,8 @@ export class AnswersController {
         },
       },
     });
+
+    answerGroupsTimer(`Found ${answerGroups.length} answer groups`);
 
     const teamUsersThatAnswered = teamUsersIds.filter((teamUserId) =>
       answerGroups.find(({ userId }) => userId === teamUserId),
@@ -103,9 +125,13 @@ export class AnswersController {
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
         try {
+          const commentCountTimer = this.$timer(`About to find comment count for ${answer.id}`);
+
           const commentCount = await this.messaging.sendMessage<
             number | undefined
           >('comments-microservice.comment-count', `routine:${answer.id}`);
+
+          commentCountTimer(`Found comment count for ${answer.id}`);
 
           return {
             ...answer,
@@ -136,6 +162,24 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
+
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    routineSettingsTimer(`Found routine settings for ${company.id}`);
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
+    const usersFromTeamTimer = this.$timer(`About to find users from team ${company.id}`);
+
+    // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -144,13 +188,9 @@ export class AnswersController {
       },
     );
 
+    usersFromTeamTimer(`Found users from team ${company.id}`);
+
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) return;
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
@@ -170,6 +210,8 @@ export class AnswersController {
     const today = dayjs();
     const threeMonthsBefore = today.subtract(3, 'months');
 
+    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
+
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: usersFromTeamIds },
@@ -186,6 +228,8 @@ export class AnswersController {
         },
       },
     });
+
+    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
 
     if (!answerGroups.length) {
       return {
@@ -280,6 +324,24 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
+
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    routineSettingsTimer(`Found routine settings for ${company.id}`);
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
+    const usersFromTeamTimer = this.$timer(`About to find users from team ${company.id}`);
+
+    // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -287,6 +349,9 @@ export class AnswersController {
         filters: { resolveTree: true },
       },
     );
+
+    usersFromTeamTimer(`Found users from team ${company.id}`);
+
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
@@ -298,16 +363,10 @@ export class AnswersController {
     );
     const questionsId = questions.map((question) => question.id);
 
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) {
-      return;
-    }
-
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
+
+    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -326,9 +385,7 @@ export class AnswersController {
       },
     });
 
-    if (!routine) {
-      return;
-    }
+    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
 
     const discouraged = [];
     const lowProductivity = [];
@@ -379,6 +436,21 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
+
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    routineSettingsTimer(`Found routine settings for ${company.id}`);
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
       (question) =>
@@ -388,16 +460,10 @@ export class AnswersController {
     );
     const questionsId = questions.map((question) => question.id);
 
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) {
-      return;
-    }
-
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
+
+    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -416,8 +482,12 @@ export class AnswersController {
       },
     });
 
+    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
+
     if (answerGroups.length < 1) {
-      return;
+      return {
+        overview: null,
+      };
     }
 
     const feeling = answerGroups[0].answers.find(
