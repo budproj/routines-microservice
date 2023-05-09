@@ -18,7 +18,7 @@ interface RoutineData {
 }
 
 @Controller('/')
-export class NatsController {
+export class RabbitMqController {
   constructor(
     private messaging: MessagingService,
     private routineSettings: RoutineSettingsService,
@@ -27,7 +27,7 @@ export class NatsController {
     private formService: FormService,
   ) {}
 
-  private readonly logger = new Logger(NatsController.name);
+  private readonly logger = new Logger(RabbitMqController.name);
 
   @RabbitRPC({
     exchange: 'bud',

@@ -11,13 +11,16 @@ import { JwtPayload } from 'jsonwebtoken';
 
 import { Team } from 'src/types/Team';
 import { User } from 'src/types/User';
+import { Stopwatch } from '../decorators/pino.decorator';
+import { MessagingService } from '../services/messaging.service';
 
 @Injectable()
 export class UserValidatorMiddleware implements NestMiddleware {
   private readonly logger = new Logger(UserValidatorMiddleware.name);
 
-  constructor(private readonly rabbitmq: AmqpConnection) {}
+  constructor(private messaging: MessagingService) {}
 
+  @Stopwatch({ omitArgs: true })
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.header('authorization');
     this.logger.log('Fetching user data');
@@ -27,23 +30,20 @@ export class UserValidatorMiddleware implements NestMiddleware {
     }
 
     const [, token] = authHeader.split(' ');
-    const decodedToken = await this.rabbitmq.request<JwtPayload>({
-      exchange: 'bud',
-      routingKey: 'business.core-ports.verify-token',
-      payload: token,
-    });
+    const decodedToken = await this.messaging.sendMessage<JwtPayload>(
+      'business.core-ports.verify-token',
+      token,
+    );
 
-    const user = await this.rabbitmq.request<User>({
-      exchange: 'bud',
-      routingKey: 'business.core-ports.get-user-with-teams-by-sub',
-      payload: decodedToken.sub,
-    });
+    const user = await this.messaging.sendMessage<User>(
+      'business.core-ports.get-user-with-teams-by-sub',
+      decodedToken.sub,
+    );
 
-    const userCompanies = await this.rabbitmq.request<Team[]>({
-      exchange: 'bud',
-      routingKey: 'business.core-ports.get-user-companies',
-      payload: user,
-    });
+    const userCompanies = await this.messaging.sendMessage<Team[]>(
+      'business.core-ports.get-user-companies',
+      user,
+    );
 
     req.user = {
       ...user,

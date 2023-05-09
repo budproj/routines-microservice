@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Answer } from '@prisma/client';
 import { groupBy, meanBy, orderBy, uniqBy } from 'lodash';
 
@@ -16,6 +16,7 @@ import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
 import { convertStringToArray } from '../../shared/utils/convert-to-array';
+import { Stopwatch } from '../../decorators/pino.decorator';
 
 interface FindAnswersQuery {
   before?: string;
@@ -34,8 +35,6 @@ interface AnswerOverview {
 
 @Controller('/answers')
 export class AnswersController {
-  private readonly logger = new Logger(AnswersController.name);
-
   constructor(
     private messaging: MessagingService,
     private answerGroupService: AnswerGroupService,
@@ -45,22 +44,7 @@ export class AnswersController {
     private cronService: CronService,
   ) {}
 
-  /**
-   * @deprecated TODO: refactor into a proper aspected-oriented logging system instead of polluting the business logic
-   */
-  $timer(startMessage: string) {
-    this.logger.log(startMessage);
-    const startedAt = Date.now();
-
-    /**
-     * @deprecated see above
-     */
-    return (endMessage: string) => {
-      const duration = Date.now() - startedAt;
-      this.logger.log(`${endMessage} after ${duration}ms`);
-    };
-  }
-
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/summary/:teamId?')
   async findAnswersFromTeam(
     @User() user: UserType,
@@ -83,8 +67,6 @@ export class AnswersController {
       (question) => question.type === 'emoji_scale',
     );
 
-    const answerGroupsTimer = this.$timer(`About to find summary for ${teamId}`);
-
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: teamUsersIds },
@@ -98,8 +80,6 @@ export class AnswersController {
         },
       },
     });
-
-    answerGroupsTimer(`Found ${answerGroups.length} answer groups`);
 
     const teamUsersThatAnswered = teamUsersIds.filter((teamUserId) =>
       answerGroups.find(({ userId }) => userId === teamUserId),
@@ -125,13 +105,9 @@ export class AnswersController {
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
         try {
-          const commentCountTimer = this.$timer(`About to find comment count for ${answer.id}`);
-
           const commentCount = await this.messaging.sendMessage<
             number | undefined
           >('comments-microservice.comment-count', `routine:${answer.id}`);
-
-          commentCountTimer(`Found comment count for ${answer.id}`);
 
           return {
             ...answer,
@@ -146,6 +122,7 @@ export class AnswersController {
     return orderBy(answersSummaryWithComments, 'timestamp');
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/overview/:teamId')
   async findOverviewFromTeam(
     @User() user: UserType,
@@ -162,22 +139,16 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
-    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
-
     // TODO: cache data
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
-
-    routineSettingsTimer(`Found routine settings for ${company.id}`);
 
     if (!routine) {
       return {
         overview: null,
       };
     }
-
-    const usersFromTeamTimer = this.$timer(`About to find users from team ${company.id}`);
 
     // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
@@ -187,8 +158,6 @@ export class AnswersController {
         filters: { resolveTree: teamId ? includeSubteams : true },
       },
     );
-
-    usersFromTeamTimer(`Found users from team ${company.id}`);
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
@@ -210,8 +179,6 @@ export class AnswersController {
     const today = dayjs();
     const threeMonthsBefore = today.subtract(3, 'months');
 
-    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
-
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: usersFromTeamIds },
@@ -228,8 +195,6 @@ export class AnswersController {
         },
       },
     });
-
-    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
 
     if (!answerGroups.length) {
       return {
@@ -312,6 +277,7 @@ export class AnswersController {
     };
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/flags/:teamId')
   async getRoutineFlagsFromTeam(
     @User() user: UserType,
@@ -324,22 +290,16 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
-    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
-
     // TODO: cache data
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
-
-    routineSettingsTimer(`Found routine settings for ${company.id}`);
 
     if (!routine) {
       return {
         overview: null,
       };
     }
-
-    const usersFromTeamTimer = this.$timer(`About to find users from team ${company.id}`);
 
     // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
@@ -349,8 +309,6 @@ export class AnswersController {
         filters: { resolveTree: true },
       },
     );
-
-    usersFromTeamTimer(`Found users from team ${company.id}`);
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
@@ -365,8 +323,6 @@ export class AnswersController {
 
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
-
-    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -384,8 +340,6 @@ export class AnswersController {
         },
       },
     });
-
-    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
 
     const discouraged = [];
     const lowProductivity = [];
@@ -424,6 +378,7 @@ export class AnswersController {
     ];
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/overview/user/:userId')
   async getUserLastMetrics(
     @User() user: UserType,
@@ -436,14 +391,10 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
-    const routineSettingsTimer = this.$timer(`About to find routine settings for ${company.id}`);
-
     // TODO: cache data
     const routine = await this.routineSettingsService.routineSettings({
       companyId: company.id,
     });
-
-    routineSettingsTimer(`Found routine settings for ${company.id}`);
 
     if (!routine) {
       return {
@@ -463,8 +414,6 @@ export class AnswersController {
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
 
-    const answerGroupsTimer = this.$timer(`About to find answer groups for ${company.id}`);
-
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId,
@@ -481,8 +430,6 @@ export class AnswersController {
         },
       },
     });
-
-    answerGroupsTimer(`Found ${answerGroups.length} answer groups for ${company.id}`);
 
     if (answerGroups.length < 1) {
       return {
