@@ -5,6 +5,7 @@ import { User } from '../../src/types/User';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { CronService } from './cron.service';
+import { Stopwatch } from '../decorators/pino.decorator';
 
 @Injectable()
 export class RoutineSettingsService {
@@ -13,6 +14,7 @@ export class RoutineSettingsService {
     private cronService: CronService,
   ) {}
 
+  @Stopwatch()
   async routineSettings(
     routineWhereUniqueInput: Prisma.RoutineSettingsWhereUniqueInput,
   ): Promise<RoutineSettings | null> {

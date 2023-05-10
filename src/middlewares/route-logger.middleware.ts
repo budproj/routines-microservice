@@ -2,6 +2,9 @@ import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * @deprecated now using Pino's built-in HTTP logger
+ */
 @Injectable()
 export class AppLoggerMiddleware implements NestMiddleware {
   private logger = new Logger('HTTP');

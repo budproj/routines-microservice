@@ -40,9 +40,13 @@
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
     "lodash": "^4.17.21",
+    "nestjs-pino": "^3.2.0",
+    "pino-http": "^8.3.3",
+    "pino-pretty": "^10.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.5.7"
+    "rxjs": "^7.5.7",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.3.0",
@@ -53,6 +57,7 @@
     "@types/lodash": "^4.14.189",
     "@types/node": "^18.13.0",
     "@types/supertest": "^2.0.12",
+    "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.51.0",
     "eslint": "^8.34.0",

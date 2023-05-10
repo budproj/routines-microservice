@@ -7,6 +7,7 @@ import { PrismaService } from '../infrastructure/orm/prisma.service';
 import { User } from '../types/User';
 import { AnswerGroupWithAnswers } from '../types/AnswerGroupWithAnswers';
 import { CronService } from './cron.service';
+import { Stopwatch } from '../decorators/pino.decorator';
 
 @Injectable()
 export class AnswerGroupService {
@@ -22,6 +23,7 @@ export class AnswerGroupService {
     });
   }
 
+  @Stopwatch()
   async answerGroups(params: {
     skip?: number;
     take?: number;

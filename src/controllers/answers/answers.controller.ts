@@ -16,6 +16,7 @@ import { User as UserType } from '../../types/User';
 import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
 import { convertStringToArray } from '../../shared/utils/convert-to-array';
+import { Stopwatch } from '../../decorators/pino.decorator';
 
 interface FindAnswersQuery {
   before?: string;
@@ -43,6 +44,7 @@ export class AnswersController {
     private cronService: CronService,
   ) {}
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/summary/:teamId?')
   async findAnswersFromTeam(
     @User() user: UserType,
@@ -120,6 +122,7 @@ export class AnswersController {
     return orderBy(answersSummaryWithComments, 'timestamp');
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/overview/:teamId')
   async findOverviewFromTeam(
     @User() user: UserType,
@@ -136,6 +139,18 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
+    // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -145,12 +160,6 @@ export class AnswersController {
     );
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) return;
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
@@ -268,6 +277,7 @@ export class AnswersController {
     };
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/flags/:teamId')
   async getRoutineFlagsFromTeam(
     @User() user: UserType,
@@ -280,6 +290,18 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
+    // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -287,6 +309,7 @@ export class AnswersController {
         filters: { resolveTree: true },
       },
     );
+
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
@@ -297,14 +320,6 @@ export class AnswersController {
         question.type === 'road_block',
     );
     const questionsId = questions.map((question) => question.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) {
-      return;
-    }
 
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
@@ -325,10 +340,6 @@ export class AnswersController {
         },
       },
     });
-
-    if (!routine) {
-      return;
-    }
 
     const discouraged = [];
     const lowProductivity = [];
@@ -367,6 +378,7 @@ export class AnswersController {
     ];
   }
 
+  @Stopwatch({ omitArgs: ['0'] })
   @Get('/overview/user/:userId')
   async getUserLastMetrics(
     @User() user: UserType,
@@ -379,6 +391,17 @@ export class AnswersController {
 
     this.securityService.isUserFromCompany(user, company.id);
 
+    // TODO: cache data
+    const routine = await this.routineSettingsService.routineSettings({
+      companyId: company.id,
+    });
+
+    if (!routine) {
+      return {
+        overview: null,
+      };
+    }
+
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
       (question) =>
@@ -387,14 +410,6 @@ export class AnswersController {
         question.type === 'road_block',
     );
     const questionsId = questions.map((question) => question.id);
-
-    const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
-    });
-
-    if (!routine) {
-      return;
-    }
 
     const parsedCron = this.cronService.parse(routine.cron);
     const { finishDate, startDate } = this.cronService.getTimespan(parsedCron);
@@ -417,7 +432,9 @@ export class AnswersController {
     });
 
     if (answerGroups.length < 1) {
-      return;
+      return {
+        overview: null,
+      };
     }
 
     const feeling = answerGroups[0].answers.find(

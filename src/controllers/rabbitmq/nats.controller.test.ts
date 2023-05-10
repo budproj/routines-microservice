@@ -7,11 +7,11 @@ import { AnswerGroupService } from '../../services/answerGroup.service';
 import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
 
-import { NatsController } from './rabbitmq.controller';
+import { RabbitMqController } from './rabbitmq.controller';
 import { FormService } from '../../services/form.service';
 
-describe('NATS Controller', () => {
-  let natsController: NatsController;
+describe('RabbitMQ Controller', () => {
+  let rabbitMqController: RabbitMqController;
 
   const dbHealthCheckPath = jest.fn();
 
@@ -84,7 +84,7 @@ describe('NATS Controller', () => {
           { name: 'NATS_SERVICE', transport: Transport.NATS },
         ]),
       ],
-      controllers: [NatsController],
+      controllers: [RabbitMqController],
       providers: [
         HealthCheckDBService,
         AnswerGroupService,
@@ -104,7 +104,7 @@ describe('NATS Controller', () => {
       .useValue(messagingServiceMock)
       .compile();
 
-    natsController = moduleRef.get(NatsController);
+    rabbitMqController = moduleRef.get(RabbitMqController);
   });
 
   describe('health-check messages', () => {
@@ -113,7 +113,7 @@ describe('NATS Controller', () => {
       const data = { id: 'some id', reply: 'testReplyQueue' };
 
       // Act
-      await natsController.onHealthCheck(data);
+      await rabbitMqController.onHealthCheck(data);
 
       // Assert
       expect(messagingServiceMock.emit).toBeCalledTimes(1);
@@ -142,7 +142,7 @@ describe('NATS Controller', () => {
       answerGroupServiceMock.answerGroups.mockResolvedValue([answerGroupMock]);
 
       // Act
-      await natsController.routineNotification(data);
+      await rabbitMqController.routineNotification(data);
 
       // Assert
       expect(
@@ -190,7 +190,7 @@ describe('NATS Controller', () => {
       answerGroupServiceMock.answerGroups.mockResolvedValue([answerGroupMock]);
 
       // Act
-      await natsController.routineNotification(data);
+      await rabbitMqController.routineNotification(data);
 
       // Assert
       expect(
@@ -208,7 +208,7 @@ describe('NATS Controller', () => {
       answerGroupServiceMock.answerGroup.mockResolvedValueOnce(mockedResponse);
 
       // Act
-      const result = await natsController.getAnswerGroupData({ id: 'um id' });
+      const result = await rabbitMqController.getAnswerGroupData({ id: 'um id' });
 
       // Assert
       expect(1).toBe(1);

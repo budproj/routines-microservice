@@ -1,5 +1,6 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { Injectable } from '@nestjs/common';
+import { Stopwatch } from '../decorators/pino.decorator';
 
 @Injectable()
 export class MessagingService {
@@ -11,6 +12,7 @@ export class MessagingService {
    * @param channel the rabbitmq channel do send the message to
    * @param payload  the payload to be send
    */
+  @Stopwatch()
   sendMessage<R>(channel: string, payload: unknown): Promise<R> {
     return this.rabbitmq.request<R>({
       exchange: 'bud',
@@ -25,6 +27,7 @@ export class MessagingService {
    * @param routingKey
    * @param data
    */
+  @Stopwatch()
   async emit(routingKey, data): Promise<void> {
     await this.rabbitmq.publish('bud', routingKey, data);
   }

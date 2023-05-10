@@ -1,11 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { LoggerModule } from 'nestjs-pino';
 
 import { AnswerController } from './controllers/answer/answer.controller';
 import { HealthCheckRestController } from './controllers/health-check/healthcheck.rest.controller';
 import { PendingRoutinesController } from './controllers/pending-routines/pending-routines.controller';
-import { NatsController } from './controllers/rabbitmq/rabbitmq.controller';
+import { RabbitMqController } from './controllers/rabbitmq/rabbitmq.controller';
 import { FormControler } from './controllers/forms/form.controller';
 import { AnswersController } from './controllers/answers/answers.controller';
 import { SettingsController } from './controllers/settings/settings.controller';
@@ -20,17 +21,34 @@ import { SecurityService } from './services/security.service';
 import { MessagingService } from './services/messaging.service';
 
 import { UserValidatorMiddleware } from './middlewares/user-validator.middleware';
-import { AppLoggerMiddleware } from './middlewares/route-logger.middleware';
 import { AnswersService } from './services/answers.service';
 
 import { PrismaService } from './infrastructure/orm/prisma.service';
 import configuration from './config/configuration';
+import { PingController } from './controllers/ping.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        redact: {
+          paths: ['req.headers'],
+        },
+        customProps: (req, res) => ({
+          context: 'HTTP',
+        }),
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            translateTime: 'yyyy-mm-dd HH:MM:ss.l o',
+            singleLine: true,
+          },
+        },
+      },
     }),
     RabbitMQModule.forRootAsync(RabbitMQModule, {
       imports: [ConfigModule],
@@ -44,7 +62,8 @@ import configuration from './config/configuration';
     }),
   ],
   controllers: [
-    NatsController,
+    PingController,
+    RabbitMqController,
     HealthCheckRestController,
     PendingRoutinesController,
     FormControler,
@@ -67,7 +86,6 @@ import configuration from './config/configuration';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AppLoggerMiddleware).forRoutes('*');
     consumer
       .apply(UserValidatorMiddleware)
       .forRoutes(
