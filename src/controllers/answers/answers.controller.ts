@@ -144,11 +144,7 @@ export class AnswersController {
       companyId: company.id,
     });
 
-    if (!routine) {
-      return {
-        overview: null,
-      };
-    }
+    if (!routine) return;
 
     // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
@@ -295,11 +291,7 @@ export class AnswersController {
       companyId: company.id,
     });
 
-    if (!routine) {
-      return {
-        overview: null,
-      };
-    }
+    if (!routine) return;
 
     // TODO: cache data
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
@@ -396,11 +388,7 @@ export class AnswersController {
       companyId: company.id,
     });
 
-    if (!routine) {
-      return {
-        overview: null,
-      };
-    }
+    if (!routine) return;
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
