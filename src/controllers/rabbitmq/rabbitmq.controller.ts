@@ -10,6 +10,7 @@ import { MessagingService } from '../../services/messaging.service';
 import { CronService } from '../../services/cron.service';
 import { FormService } from '../../services/form.service';
 import { RoutineFormLangs } from '../../services/constants/form';
+import { Stopwatch } from '../../decorators/pino.decorator';
 
 interface RoutineData {
   id: string;
@@ -93,6 +94,7 @@ export class RabbitMqController {
     return answerGroups;
   }
 
+  @Stopwatch()
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.routine-notification',
@@ -117,19 +119,16 @@ export class RabbitMqController {
 
     const filteredUsers = companyUsers
       .filter((user) => {
-        const teste =
-          this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
-            user,
-            routineData.disabledTeams,
-          );
-        return teste;
-      })
-      .map((user) => {
-        const test = this.routineSettings.removeDisabledTeamsFromUser(
+        return this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
           user,
           routineData.disabledTeams,
         );
-        return test;
+      })
+      .map((user) => {
+        return this.routineSettings.removeDisabledTeamsFromUser(
+          user,
+          routineData.disabledTeams,
+        );
       });
 
     const dateToCalculate = await this.routineSettings.getCurrentRoutineDate(
@@ -159,6 +158,7 @@ export class RabbitMqController {
     );
   }
 
+  @Stopwatch()
   @RabbitRPC({
     exchange: 'bud',
     queue: 'routines-microservice.routine-reminder-notification',

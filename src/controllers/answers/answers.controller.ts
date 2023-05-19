@@ -54,12 +54,14 @@ export class AnswersController {
     const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
     const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
-    const company = await this.messaging.sendMessage<Team>(
-      'business.core-ports.get-team-company',
-      { id: teamId ?? user.companies[0].id },
-    );
+    const { id: companyId } = teamId
+      ? await this.messaging.sendMessage<Team>(
+          'business.core-ports.get-team-company',
+          { id: teamId },
+        )
+      : { id: user.companies[0].id };
 
-    this.securityService.isUserFromCompany(user, company.id);
+    this.securityService.isUserFromCompany(user, companyId);
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
 
@@ -102,6 +104,7 @@ export class AnswersController {
       }
     });
 
+    // TODO: move these requests to the front-end as a way to (1) reduce this request's response time and (2) lower the coupling between microservices
     const answersSummaryWithComments = await Promise.all(
       formattedAnswerOverview.map(async (answer) => {
         try {
@@ -132,21 +135,25 @@ export class AnswersController {
     @Query('after') after?: string,
     @Query('before') before?: string,
   ) {
-    const company = await this.messaging.sendMessage<Team>(
-      'business.core-ports.get-team-company',
-      { id: teamId ?? user.companies[0].id },
-    );
+    const { id: companyId } = teamId
+      ? await this.messaging.sendMessage<Team>(
+          'business.core-ports.get-team-company',
+          { id: teamId },
+        )
+      : { id: user.companies[0].id };
 
-    this.securityService.isUserFromCompany(user, company.id);
+    this.securityService.isUserFromCompany(user, companyId);
 
-    // TODO: cache data
+    // TODO: cache data?
     const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
+      companyId,
     });
 
-    if (!routine) return;
+    if (!routine) {
+      return;
+    }
 
-    // TODO: cache data
+    // TODO: cache data?
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -279,21 +286,25 @@ export class AnswersController {
     @User() user: UserType,
     @Param('teamId') teamId: string,
   ) {
-    const company = await this.messaging.sendMessage<Team>(
-      'business.core-ports.get-team-company',
-      { id: teamId ?? user.companies[0].id },
-    );
+    const { id: companyId } = teamId
+      ? await this.messaging.sendMessage<Team>(
+          'business.core-ports.get-team-company',
+          { id: teamId },
+        )
+      : { id: user.companies[0].id };
 
-    this.securityService.isUserFromCompany(user, company.id);
+    this.securityService.isUserFromCompany(user, companyId);
 
-    // TODO: cache data
+    // TODO: cache data?
     const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
+      companyId,
     });
 
-    if (!routine) return;
+    if (!routine) {
+      return;
+    }
 
-    // TODO: cache data
+    // TODO: cache data?
     const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
       {
@@ -376,19 +387,18 @@ export class AnswersController {
     @User() user: UserType,
     @Param('userId') userId: string,
   ) {
-    const company = await this.messaging.sendMessage<Team>(
-      'business.core-ports.get-team-company',
-      { id: user.companies[0].id },
-    );
+    const companyId = user.companies[0].id;
 
-    this.securityService.isUserFromCompany(user, company.id);
+    this.securityService.isUserFromCompany(user, companyId);
 
-    // TODO: cache data
+    // TODO: cache data?
     const routine = await this.routineSettingsService.routineSettings({
-      companyId: company.id,
+      companyId,
     });
 
-    if (!routine) return;
+    if (!routine) {
+      return;
+    }
 
     const form = this.formService.getRoutineForm(RoutineFormLangs.PT_BR);
     const questions = form.filter(
@@ -420,9 +430,7 @@ export class AnswersController {
     });
 
     if (answerGroups.length < 1) {
-      return {
-        overview: null,
-      };
+      return;
     }
 
     const feeling = answerGroups[0].answers.find(

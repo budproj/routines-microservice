@@ -10,6 +10,7 @@ import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { Team } from '../../types/Team';
 import { SettingsWithoutCompany } from '../../types/Settings';
 import { MessagingService } from '../../services/messaging.service';
+import { Stopwatch } from '../../decorators/pino.decorator';
 
 @Controller('/settings')
 export class SettingsController {
@@ -39,6 +40,7 @@ export class SettingsController {
     await Promise.all(createPromises);
   }
 
+  @Stopwatch()
   @Post('/:companyId')
   async createSettings(
     @User() user: UserType,
@@ -83,6 +85,7 @@ export class SettingsController {
     return createdSettings;
   }
 
+  @Stopwatch()
   @Patch()
   async updateCompanySettings(
     @User() user: UserType,
