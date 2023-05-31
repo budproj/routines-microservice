@@ -132,7 +132,7 @@ export class AnswersController {
       // Wed: 29
       // Thu: 24
       // Sat: 3
-      return [1, 5].includes(new Date().getDay()) ? 15 * 60 : 1 * 60 * 60;
+      return [1, 5].includes(new Date().getDay()) ? 15 * 60 : 60 * 60;
     },
   )
   private async fetchCommentCount(
@@ -152,7 +152,7 @@ export class AnswersController {
     }
   }
 
-  @Cacheable((teamId, resolveTree) => `${teamId}:${resolveTree}`, 260 * 60)
+  @Cacheable((teamId, resolveTree) => `${teamId}:${resolveTree}`, 60 * 60)
   private async getUsersFromTeam(teamId: string, resolveTree: boolean) {
     return await this.messaging.sendMessage<UserType[]>(
       'business.core-ports.get-users-from-team',
