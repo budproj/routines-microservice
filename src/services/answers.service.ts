@@ -4,6 +4,7 @@ import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 
 import { PrismaService } from '../infrastructure/orm/prisma.service';
+import { Stopwatch } from '../decorators/pino.decorator';
 
 @Injectable()
 export class AnswersService {
@@ -19,6 +20,7 @@ export class AnswersService {
     });
   }
 
+  @Stopwatch()
   async answers(params: {
     skip?: number;
     take?: number;

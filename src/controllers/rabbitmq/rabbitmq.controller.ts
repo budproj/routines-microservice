@@ -11,6 +11,7 @@ import { CronService } from '../../services/cron.service';
 import { FormService } from '../../services/form.service';
 import { RoutineFormLangs } from '../../services/constants/form';
 import { Stopwatch } from '../../decorators/pino.decorator';
+import { Cacheable } from '../../decorators/cacheable.decorator';
 
 interface RoutineData {
   id: string;
@@ -94,6 +95,14 @@ export class RabbitMqController {
     return answerGroups;
   }
 
+  @Cacheable('0', 60 * 60)
+  private async getUsersFromTeam(payload: unknown) {
+    return await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      payload,
+    );
+  }
+
   @Stopwatch()
   @RabbitRPC({
     exchange: 'bud',
@@ -108,14 +117,10 @@ export class RabbitMqController {
   async routineNotification(@Payload() routineData: RoutineData) {
     this.logger.log('New routine notification message with data:', routineData);
 
-    const payload = {
+    const companyUsers = await this.getUsersFromTeam({
       teamID: routineData.companyId,
       filters: { resolveTree: true, withTeams: true },
-    };
-    const companyUsers = await this.messaging.sendMessage<UserType[]>(
-      'business.core-ports.get-users-from-team',
-      payload,
-    );
+    });
 
     const filteredUsers = companyUsers
       .filter((user) => {
@@ -175,14 +180,10 @@ export class RabbitMqController {
       routineData,
     );
 
-    const payload = {
+    const companyUsers = await this.getUsersFromTeam({
       teamID: routineData.companyId,
       filters: { resolveTree: true, withTeams: true },
-    };
-    const companyUsers = await this.messaging.sendMessage<UserType[]>(
-      'business.core-ports.get-users-from-team',
-      payload,
-    );
+    });
 
     const filteredUsers = companyUsers
       .filter((user) =>

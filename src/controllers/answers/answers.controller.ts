@@ -78,7 +78,10 @@ export class AnswersController {
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
         userId: { in: teamUsersIds },
-        timestamp: { lte: new Date(query.before), gte: new Date(query.after) },
+        timestamp: {
+          lte: dayjs(query.before).endOf('day').toDate(),
+          gte: dayjs(query.after).startOf('day').toDate(),
+        },
       },
       include: {
         answers: {
@@ -134,6 +137,17 @@ export class AnswersController {
     }
   }
 
+  @Cacheable((teamId, resolveTree) => `${teamId}:${resolveTree}`, 260 * 60)
+  private async getUsersFromTeam(teamId: string, resolveTree: boolean) {
+    return await this.messaging.sendMessage<UserType[]>(
+      'business.core-ports.get-users-from-team',
+      {
+        teamID: teamId,
+        filters: { resolveTree },
+      },
+    );
+  }
+
   @Stopwatch({ omitArgs: ['0'] })
   @Get('/overview/:teamId')
   async findOverviewFromTeam(
@@ -159,13 +173,9 @@ export class AnswersController {
       return;
     }
 
-    // TODO: cache data?
-    const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
-      'business.core-ports.get-users-from-team',
-      {
-        teamID: teamId ?? user.companies[0].id,
-        filters: { resolveTree: teamId ? includeSubteams : true },
-      },
+    const usersFromTeam = await this.getUsersFromTeam(
+      teamId ?? user.companies[0].id,
+      teamId ? includeSubteams : true,
     );
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
@@ -192,8 +202,12 @@ export class AnswersController {
       where: {
         userId: { in: usersFromTeamIds },
         timestamp: {
-          lte: before ?? today.toDate(),
-          gte: after ?? threeMonthsBefore.toDate(),
+          lte: dayjs(before ?? today)
+            .endOf('day')
+            .toDate(),
+          gte: dayjs(after ?? threeMonthsBefore)
+            .startOf('day')
+            .toDate(),
         },
       },
       include: {
@@ -307,13 +321,9 @@ export class AnswersController {
       return;
     }
 
-    // TODO: cache data?
-    const usersFromTeam = await this.messaging.sendMessage<UserType[]>(
-      'business.core-ports.get-users-from-team',
-      {
-        teamID: teamId ?? user.companies[0].id,
-        filters: { resolveTree: true },
-      },
+    const usersFromTeam = await this.getUsersFromTeam(
+      teamId ?? user.companies[0].id,
+      true,
     );
 
     const usersFromTeamIds = usersFromTeam.map((user) => user.id);
@@ -419,9 +429,7 @@ export class AnswersController {
       where: {
         userId,
         timestamp: {
-          // TODO: endOfDay
           lte: finishDate,
-          // TODO: startOfDay
           gte: startDate,
         },
       },

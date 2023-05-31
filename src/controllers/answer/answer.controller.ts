@@ -22,6 +22,7 @@ import { RoutineSettingsService } from '../../services/routineSettings.service';
 import { CronService } from '../../services/cron.service';
 import { AnswersService } from '../../services/answers.service';
 import { MessagingService } from '../../services/messaging.service';
+import { Cacheable } from '../../decorators/cacheable.decorator';
 
 @Controller('/answer')
 export class AnswerController {
@@ -240,10 +241,7 @@ export class AnswerController {
     });
 
     const validAnswers = userAnswers.filter((answer) => answer);
-    const userThatAnswered = await this.messaging.sendMessage<UserType>(
-      'business.core-ports.get-user',
-      answerGroup.userId,
-    );
+    const userThatAnswered = await this.getUser(answerGroup.userId);
 
     const answerDetails = {
       user: userThatAnswered,
@@ -252,6 +250,14 @@ export class AnswerController {
     };
 
     return answerDetails;
+  }
+
+  @Cacheable('0', 60 * 60)
+  private async getUser(userId: string) {
+    return await this.messaging.sendMessage<UserType>(
+      'business.core-ports.get-user',
+      userId,
+    );
   }
 
   @Delete('/:answerId')
