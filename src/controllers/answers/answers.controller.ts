@@ -121,8 +121,23 @@ export class AnswersController {
     return orderBy(answersSummaryWithComments, 'timestamp');
   }
 
-  @Cacheable('0.id', 24 * 60 * 60)
-  private async fetchCommentCount(answer: Omit<AnswerOverview, 'commentCount'>) {
+  @Cacheable(
+    '0.id',
+    // Reduces the TTL when it's Monday. Hacky, but it works ¯\_(ツ)_/¯
+    () => {
+      // Comment count by week day since 2023-05-01
+      // Fri: 329
+      // Mon: 257
+      // Tue: 75
+      // Wed: 29
+      // Thu: 24
+      // Sat: 3
+      return [1, 5].includes(new Date().getDay()) ? 15 * 60 : 1 * 60 * 60;
+    },
+  )
+  private async fetchCommentCount(
+    answer: Omit<AnswerOverview, 'commentCount'>,
+  ) {
     try {
       const commentCount = await this.messaging.sendMessage<
         number | undefined
