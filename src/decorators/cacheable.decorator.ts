@@ -16,13 +16,17 @@ export const Cacheable = (
    */
   keyGetter: KeyGetter,
   /**
-   * TTL in seconds, or NodeCache options object
+   * TTL in seconds, or a function that returns the TTL in seconds
    */
-  ttlOrOptions: number | NodeCache.Options,
+  ttlOrGetter: number | (<T>(result: T) => number),
+  /**
+   * Optional NodeCache options object
+   */
+  options: NodeCache.Options = {},
 ): MethodDecorator => {
-  const cache = new NodeCache(
-    typeof ttlOrOptions === 'number' ? { stdTTL: ttlOrOptions } : ttlOrOptions,
-  );
+  const cache = new NodeCache(options);
+
+  const ttlGetter = typeof ttlOrGetter === 'function' ? ttlOrGetter : () => ttlOrGetter;
 
   return <T extends object>(target, propertyKey, descriptor) => {
     const original = descriptor.value;
@@ -48,7 +52,7 @@ export const Cacheable = (
         const result = target.apply(thisArg, args);
 
         const updateCache = (value) => {
-          cache.set(safeKey, value);
+          cache.set(safeKey, value, ttlGetter(value));
           return value;
         };
 
