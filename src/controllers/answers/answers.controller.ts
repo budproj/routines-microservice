@@ -17,6 +17,7 @@ import { RoutineSettingsService } from '../../services/routineSettings.service';
 import * as dayjs from 'dayjs';
 import { convertStringToArray } from '../../shared/utils/convert-to-array';
 import { Stopwatch } from '../../decorators/pino.decorator';
+import { Cacheable } from '../../decorators/cacheable.decorator';
 
 interface FindAnswersQuery {
   before?: string;
@@ -44,6 +45,14 @@ export class AnswersController {
     private cronService: CronService,
   ) {}
 
+  @Cacheable('0', 24 * 60 * 60)
+  private async getTeamCompany(teamId: string): Promise<Team> {
+    return await this.messaging.sendMessage<Team>(
+      'business.core-ports.get-team-company',
+      { id: teamId },
+    );
+  }
+
   @Stopwatch({ omitArgs: ['0'] })
   @Get('/summary/:teamId?')
   async findAnswersFromTeam(
@@ -55,10 +64,7 @@ export class AnswersController {
 
     const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
     const { id: companyId } = teamId
-      ? await this.messaging.sendMessage<Team>(
-          'business.core-ports.get-team-company',
-          { id: teamId },
-        )
+      ? await this.getTeamCompany(teamId)
       : { id: user.companies[0].id };
 
     this.securityService.isUserFromCompany(user, companyId);
@@ -106,23 +112,26 @@ export class AnswersController {
 
     // TODO: move these requests to the front-end as a way to (1) reduce this request's response time and (2) lower the coupling between microservices
     const answersSummaryWithComments = await Promise.all(
-      formattedAnswerOverview.map(async (answer) => {
-        try {
-          const commentCount = await this.messaging.sendMessage<
-            number | undefined
-          >('comments-microservice.comment-count', `routine:${answer.id}`);
-
-          return {
-            ...answer,
-            commentCount,
-          };
-        } catch (err) {
-          return answer;
-        }
-      }),
+      formattedAnswerOverview.map((answer) => this.fetchCommentCount(answer)),
     );
 
     return orderBy(answersSummaryWithComments, 'timestamp');
+  }
+
+  @Cacheable('0.id', 24 * 60 * 60)
+  private async fetchCommentCount(answer: Omit<AnswerOverview, 'commentCount'>) {
+    try {
+      const commentCount = await this.messaging.sendMessage<
+        number | undefined
+      >('comments-microservice.comment-count', `routine:${answer.id}`);
+
+      return {
+        ...answer,
+        commentCount,
+      };
+    } catch (err) {
+      return answer;
+    }
   }
 
   @Stopwatch({ omitArgs: ['0'] })
@@ -136,10 +145,7 @@ export class AnswersController {
     @Query('before') before?: string,
   ) {
     const { id: companyId } = teamId
-      ? await this.messaging.sendMessage<Team>(
-          'business.core-ports.get-team-company',
-          { id: teamId },
-        )
+      ? await this.getTeamCompany(teamId)
       : { id: user.companies[0].id };
 
     this.securityService.isUserFromCompany(user, companyId);
@@ -287,10 +293,7 @@ export class AnswersController {
     @Param('teamId') teamId: string,
   ) {
     const { id: companyId } = teamId
-      ? await this.messaging.sendMessage<Team>(
-          'business.core-ports.get-team-company',
-          { id: teamId },
-        )
+      ? await this.getTeamCompany(teamId)
       : { id: user.companies[0].id };
 
     this.securityService.isUserFromCompany(user, companyId);
@@ -416,7 +419,9 @@ export class AnswersController {
       where: {
         userId,
         timestamp: {
+          // TODO: endOfDay
           lte: finishDate,
+          // TODO: startOfDay
           gte: startDate,
         },
       },
