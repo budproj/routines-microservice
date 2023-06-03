@@ -1,10 +1,10 @@
 import * as NodeCache from 'node-cache';
-import { hasher } from 'node-object-hash';
+import * as objectHash from 'object-hash';
 import { get } from 'lodash';
 
-const hashSortCoerce = hasher({ sort: true, coerce: true });
-
-type KeyGetter = Parameters<typeof get>[1] | ((...args: any[]) => string);
+type KeyGetter =
+  | Parameters<typeof get>[1]
+  | ((...arguments_: any[]) => string | Parameters<typeof objectHash.sha1>[0])
 
 /**
  * @deprecated this is probably one of the worst ways to implement a cache, but still acceptable due to our limited resources and current backend overload
@@ -26,30 +26,54 @@ export const Cacheable = (
 ): MethodDecorator => {
   const cache = new NodeCache(options);
 
-  const ttlGetter = typeof ttlOrGetter === 'function' ? ttlOrGetter : () => ttlOrGetter;
+  const ttlGetter =
+    typeof ttlOrGetter === 'function' ? ttlOrGetter : () => ttlOrGetter;
 
   return <T extends object>(target, propertyKey, descriptor) => {
+    const contextName = `${target.constructor.name}.${String(propertyKey)}`;
     const original = descriptor.value;
 
     const getKey =
       typeof keyGetter === 'function'
         ? keyGetter
-        : (...args) => get(args, keyGetter);
+        : (...arguments_) => get(arguments_, keyGetter);
 
     descriptor.value = new Proxy(original, {
       apply: (target, thisArg, args) => {
         const providedKey = getKey(...args);
 
-        const safeKey =
-          typeof providedKey === 'string'
-            ? providedKey
-            : hashSortCoerce.hash(providedKey);
+        const callOriginal = () => target.apply(thisArg, args);
+
+        let safeKey;
+
+        try {
+          safeKey =
+            typeof providedKey === 'string'
+              ? providedKey
+              : objectHash(providedKey, {
+                  ignoreUnknown: true,
+                  respectType: false,
+                });
+
+          if (safeKey === undefined) {
+            console.warn(
+              `@Cacheable at ${contextName} receved undefined key, which is probably a mistake. Falling back to original method for safety reasons.`,
+            );
+            return callOriginal();
+          }
+        } catch (error: unknown) {
+          console.warn(
+            `@Cacheable at ${contextName} failed. Falling back to original method:`,
+            error,
+          );
+          return callOriginal();
+        }
 
         if (cache.has(safeKey)) {
           return cache.get(safeKey);
         }
 
-        const result = target.apply(thisArg, args);
+        const result = callOriginal();
 
         const updateCache = (value) => {
           cache.set(safeKey, value, ttlGetter(value));
