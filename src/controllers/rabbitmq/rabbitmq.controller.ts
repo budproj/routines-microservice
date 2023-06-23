@@ -115,7 +115,10 @@ export class RabbitMqController {
     },
   })
   async routineNotification(@Payload() routineData: RoutineData) {
-    this.logger.log('New routine notification message with data:', routineData);
+    this.logger.log(
+      'New routine notification message with data %o',
+      routineData,
+    );
 
     const companyUsers = await this.getUsersFromTeam({
       teamID: routineData.companyId,
@@ -176,7 +179,7 @@ export class RabbitMqController {
   })
   async routineReminder(@Payload() routineData: RoutineData) {
     this.logger.log(
-      'New routine reminder notification message with data:',
+      'New routine reminder notification message with data %o',
       routineData,
     );
 
