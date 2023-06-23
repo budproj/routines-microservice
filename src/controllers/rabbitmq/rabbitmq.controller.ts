@@ -125,6 +125,8 @@ export class RabbitMqController {
       filters: { resolveTree: true, withTeams: true },
     });
 
+    this.logger.log(`Got ${companyUsers.length} total users in company`);
+
     const filteredUsers = companyUsers
       .filter((user) => {
         return this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
@@ -139,6 +141,9 @@ export class RabbitMqController {
         );
       });
 
+
+    this.logger.log(`Got ${filteredUsers.length} total users in company`);
+
     const dateToCalculate = await this.routineSettings.getCurrentRoutineDate(
       routineData.id,
     );
@@ -150,11 +155,15 @@ export class RabbitMqController {
       },
     });
 
+    this.logger.log(`Got ${answerGroups.length} answer groups`);
+
     const usersWithPendingRoutines = filteredUsers.filter((user) => {
       return !answerGroups.some(
         (answerGroup) => answerGroup.userId === user.id,
       );
     });
+
+    this.logger.log(`Got ${usersWithPendingRoutines.length} users with pending routines`);
 
     const pendenciesPayload = {
       companyUsers,
@@ -188,6 +197,8 @@ export class RabbitMqController {
       filters: { resolveTree: true, withTeams: true },
     });
 
+    this.logger.log(`Got ${companyUsers.length} total users in company`);
+
     const filteredUsers = companyUsers
       .filter((user) =>
         this.routineSettings.userHasAtLeastOneTeamWithActiveRoutine(
@@ -202,9 +213,16 @@ export class RabbitMqController {
         ),
       );
 
+    this.logger.log(`Got  ${filteredUsers.length} users`);
+
     const dateToCalculate = await this.routineSettings.getCurrentRoutineDate(
       routineData.id,
     );
+
+    // FIXME: replace with date-fns#startOfDay
+    dateToCalculate.setHours(0);
+    dateToCalculate.setMinutes(0);
+    dateToCalculate.setSeconds(0);
 
     const answerGroups = await this.answerGroupService.answerGroups({
       where: {
@@ -212,6 +230,8 @@ export class RabbitMqController {
         companyId: routineData.companyId,
       },
     });
+
+    this.logger.log(`Got  ${answerGroups.length} answer groups`);
 
     if (answerGroups.length > 0) {
       const timestamp = new Date().toISOString();
@@ -233,6 +253,8 @@ export class RabbitMqController {
           })),
         )
         .flat();
+
+      this.logger.log(`Got  ${messages.length} messages to send`);
 
       const messagesPromises = messages.map(async (message) => {
         this.logger.log('Sending notification', message);
