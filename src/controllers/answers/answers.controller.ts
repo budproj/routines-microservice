@@ -117,10 +117,11 @@ export class AnswersController {
 
     // TODO: move these requests to the front-end as a way to (1) reduce this request's response time and (2) lower the coupling between microservices
     const answersSummaryWithComments = await Promise.all(
-      formattedAnswerOverview.map(async (answer) => ({
-        ...answer,
-        commentCount: await this.fetchCommentCount(answer),
-      })),
+      formattedAnswerOverview.map(async (answer) => {
+        const commentCount = await this.fetchCommentCount(answer);
+        if (commentCount) return { ...answer, commentCount };
+        return answer;
+      }),
     );
 
     return orderBy(answersSummaryWithComments, 'timestamp');
@@ -151,7 +152,7 @@ export class AnswersController {
 
       return commentCount;
     } catch (err) {
-      return 0;
+      return;
     }
   }
 
