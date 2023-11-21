@@ -79,7 +79,7 @@ export class AnswersController {
       where: {
         userId: { in: teamUsersIds },
         timestamp: {
-          lte: dayjs(query.before).endOf('day').toDate(),
+          lte: dayjs(query.before).subtract(1, 'day').endOf('day').toDate(),
           gte: dayjs(query.after).startOf('day').toDate(),
         },
       },
@@ -139,9 +139,10 @@ export class AnswersController {
     answer: Omit<AnswerOverview, 'commentCount'>,
   ) {
     try {
-      const commentCount = await this.messaging.sendMessage<
-        number | undefined
-      >('comments-microservice.comment-count', `routine:${answer.id}`);
+      const commentCount = await this.messaging.sendMessage<number | undefined>(
+        'comments-microservice.comment-count',
+        `routine:${answer.id}`,
+      );
 
       return {
         ...answer,
