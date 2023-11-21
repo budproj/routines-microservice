@@ -34,14 +34,6 @@ interface AnswerOverview {
   commentCount?: number;
 }
 
-interface Outro {
-  answers: AnswerOverview[];
-  timestamp: {
-    lte: Date;
-    gte: Date;
-  };
-  answerGroups: AnswerGroupWithAnswers[];
-}
 @Controller('/answers')
 export class AnswersController {
   constructor(
@@ -67,12 +59,10 @@ export class AnswersController {
     @User() user: UserType,
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
-  ): Promise<Outro> {
+  ): Promise<AnswerOverview[]> {
     const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
-    const teamUsersIds: string[] = [
-      ...new Set(convertStringToArray(decodedTeamUsersIds)),
-    ];
+    const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
     const { id: companyId } = teamId
       ? await this.getTeamCompany(teamId)
       : { id: user.companies[0].id };
@@ -89,7 +79,7 @@ export class AnswersController {
       where: {
         userId: { in: teamUsersIds },
         timestamp: {
-          lte: dayjs(query.before).endOf('day').toDate(),
+          lte: dayjs(query.before).subtract(1, 'day').endOf('day').toDate(),
           gte: dayjs(query.after).startOf('day').toDate(),
         },
       },
@@ -125,21 +115,10 @@ export class AnswersController {
 
     // TODO: move these requests to the front-end as a way to (1) reduce this request's response time and (2) lower the coupling between microservices
     const answersSummaryWithComments = await Promise.all(
-      formattedAnswerOverview.map(async (answer) => {
-        const commentCount = await this.fetchCommentCount(answer);
-        if (commentCount) return { ...answer, commentCount };
-        return answer;
-      }),
+      formattedAnswerOverview.map((answer) => this.fetchCommentCount(answer)),
     );
 
-    return {
-      answers: orderBy(answersSummaryWithComments, 'timestamp'),
-      answerGroups,
-      timestamp: {
-        lte: dayjs(query.before).endOf('day').toDate(),
-        gte: dayjs(query.after).startOf('day').toDate(),
-      },
-    };
+    return orderBy(answersSummaryWithComments, 'timestamp');
   }
 
   @Cacheable(
@@ -165,9 +144,12 @@ export class AnswersController {
         `routine:${answer.id}`,
       );
 
-      return commentCount;
+      return {
+        ...answer,
+        commentCount,
+      };
     } catch (err) {
-      return;
+      return answer;
     }
   }
 
