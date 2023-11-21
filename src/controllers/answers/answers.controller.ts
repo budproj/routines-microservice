@@ -62,7 +62,9 @@ export class AnswersController {
   ): Promise<AnswerOverview[]> {
     const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
-    const teamUsersIds = convertStringToArray(decodedTeamUsersIds);
+    const teamUsersIds: string[] = [
+      ...new Set(convertStringToArray(decodedTeamUsersIds)),
+    ];
     const { id: companyId } = teamId
       ? await this.getTeamCompany(teamId)
       : { id: user.companies[0].id };
@@ -139,9 +141,10 @@ export class AnswersController {
     answer: Omit<AnswerOverview, 'commentCount'>,
   ) {
     try {
-      const commentCount = await this.messaging.sendMessage<
-        number | undefined
-      >('comments-microservice.comment-count', `routine:${answer.id}`);
+      const commentCount = await this.messaging.sendMessage<number | undefined>(
+        'comments-microservice.comment-count',
+        `routine:${answer.id}`,
+      );
 
       return {
         ...answer,
