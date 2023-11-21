@@ -34,6 +34,14 @@ interface AnswerOverview {
   commentCount?: number;
 }
 
+interface Outro {
+  answers: AnswerOverview[];
+  timestamp: {
+    lte: Date;
+    gte: Date;
+  };
+  answerGroups: AnswerGroupWithAnswers[];
+}
 @Controller('/answers')
 export class AnswersController {
   constructor(
@@ -59,7 +67,7 @@ export class AnswersController {
     @User() user: UserType,
     @Param('teamId') teamId: string,
     @Query() query: FindAnswersQuery,
-  ): Promise<AnswerOverview[]> {
+  ): Promise<Outro> {
     const decodedTeamUsersIds = decodeURIComponent(query.teamUsersIds);
 
     const teamUsersIds: string[] = [
@@ -116,15 +124,22 @@ export class AnswersController {
     });
 
     // TODO: move these requests to the front-end as a way to (1) reduce this request's response time and (2) lower the coupling between microservices
-    // const answersSummaryWithComments = await Promise.all(
-    //   formattedAnswerOverview.map(async (answer) => {
-    //     const commentCount = await this.fetchCommentCount(answer);
-    //     if (commentCount) return { ...answer, commentCount };
-    //     return answer;
-    //   }),
-    // );
+    const answersSummaryWithComments = await Promise.all(
+      formattedAnswerOverview.map(async (answer) => {
+        const commentCount = await this.fetchCommentCount(answer);
+        if (commentCount) return { ...answer, commentCount };
+        return answer;
+      }),
+    );
 
-    return orderBy(formattedAnswerOverview, 'timestamp');
+    return {
+      answers: orderBy(answersSummaryWithComments, 'timestamp'),
+      answerGroups,
+      timestamp: {
+        lte: dayjs(query.before).endOf('day').toDate(),
+        gte: dayjs(query.after).startOf('day').toDate(),
+      },
+    };
   }
 
   @Cacheable(
